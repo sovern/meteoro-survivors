@@ -126,6 +126,7 @@ data-tree.js     árvore passiva (gerada, conectividade garantida)
 data-wtree.js    10 mini-árvores de arma + evoluções
 data-stages.js   10 fases, temas, chefes e padrões
 data-meta.js     magos, artefatos e marcos
+icons/           sprite sheets (weapons 5x2, tree-stats 6x2)
 ```
 
 ## Dev: testes

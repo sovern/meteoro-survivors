@@ -2566,6 +2566,73 @@ window.__game = (function () {
     g.fillText(ch, x, y + 1);
     g.textBaseline = 'alphabetic';
   }
+  var NWEP = {
+    'Chuva de Lâminas': 'bolt', 'Cataclismo': 'meteor', 'Tempestade Infinita': 'chain', 'Supernova': 'nova',
+    'Feixe Duplo': 'rail', 'Constelação': 'orb', 'Enxame Implacável': 'miss', 'Coração Glacial': 'frost',
+    'Campo Minado': 'mine', 'Vendaval': 'rang'
+  };
+  function nodeWeapon(n) {
+    if (!n) return null;
+    if (n.gate) return n.gate;
+    if (n.notable && NWEP[n.name]) return NWEP[n.name];
+    if (n.notable || n.start || n.evo) return null;
+    var mods = n.mods || {}, k;
+    for (k in mods) {
+      var m = k.match(/^(bolt|meteor|chain|nova|rail|orb|miss|frost|mine|rang)/);
+      if (m) return m[1];
+    }
+    return null;
+  }
+  var WPOS = { bolt: [0, 0], meteor: [1, 0], orb: [2, 0], chain: [3, 0], nova: [4, 0], rail: [0, 1], miss: [1, 1], frost: [2, 1], mine: [3, 1], rang: [4, 1] };
+  var SPOS = {
+    maxhp: [0, 0], regen: [1, 0], armor: [2, 0], speed: [3, 0], critC: [4, 0], dodge: [5, 0],
+    magnet: [0, 1], greed: [1, 1], wis: [2, 1], allDmg: [3, 1], allHp: [0, 0], start: [4, 1], evo: [5, 1]
+  };
+  function nodeStat(n) {
+    if (!n || n.gate) return null;
+    if (n.start) return 'start';
+    if (n.evo) return 'evo';
+    if (n.notable && NWEP[n.name]) return null;
+    var mods = n.mods || {}, k;
+    for (k in mods) {
+      if (/^(bolt|meteor|chain|nova|rail|orb|miss|frost|mine|rang)/.test(k)) return null;
+      return k;
+    }
+    return null;
+  }
+  var SHEETS = {};
+  function sheetFor(name) {
+    if (typeof Image === 'undefined') return null;
+    if (!SHEETS[name]) {
+      var im = new Image();
+      im.onload = function () {
+        if (wtOpen) renderWTree();
+        else if (treeOpen) renderTree();
+      };
+      im.src = 'icons/' + name + '.png';
+      SHEETS[name] = im;
+    }
+    var im2 = SHEETS[name];
+    return (im2.complete && im2.naturalWidth > 0) ? im2 : null;
+  }
+  function drawSheetCell(g, name, cols, rows, col, row, x, y, size) {
+    var im = sheetFor(name);
+    if (!im) return false;
+    var cw = im.naturalWidth / cols, ch = im.naturalHeight / rows;
+    g.drawImage(im, col * cw, row * ch, cw, ch, x - size / 2, y - size / 2, size, size);
+    return true;
+  }
+  function drawNodeImg(g, n, x, y, size) {
+    var w = nodeWeapon(n);
+    if (w && WPOS[w]) {
+      if (drawSheetCell(g, 'weapons', 5, 2, WPOS[w][0], WPOS[w][1], x, y, size)) return true;
+    }
+    var st = nodeStat(n);
+    if (st && SPOS[st]) {
+      if (drawSheetCell(g, 'tree-stats', 6, 2, SPOS[st][0], SPOS[st][1], x, y, size)) return true;
+    }
+    return false;
+  }
   function treeIsOwned(id) { return meta.tree.owned.indexOf(id) >= 0; }
   function treeAvail(id) {
     if (treeIsOwned(id)) return false;
@@ -2649,21 +2716,21 @@ window.__game = (function () {
       var r = n.start ? 22 : n.notable ? 19 : 11;
       if (n.gate) {
         drawDiamond(g, n.x, n.y, r + 4, owned ? col : '#141a30', owned ? '#fff' : avail ? col : 'rgba(120,130,160,0.4)', owned || avail ? 3 : 1.5);
-        drawGlyph(g, nodeIcon(n), n.x, n.y, 22, owned ? '#070b18' : col);
+        if (!drawNodeImg(g, n, n.x, n.y, 30)) drawGlyph(g, nodeIcon(n), n.x, n.y, 22, owned ? '#070b18' : col);
         g.fillStyle = owned ? '#ffd700' : 'rgba(200,200,220,0.75)';
         g.font = 'bold 11px Verdana,sans-serif';
         g.fillText(n.name, n.x, n.y - r - 13);
       } else if (owned) {
         g.fillStyle = col;
         g.beginPath(); g.arc(n.x, n.y, r, 0, TAU); g.fill();
-        drawGlyph(g, nodeIcon(n), n.x, n.y, n.start ? 20 : n.notable ? 17 : 11, '#070b18');
+        if (!drawNodeImg(g, n, n.x, n.y, r * 1.6)) drawGlyph(g, nodeIcon(n), n.x, n.y, n.start ? 20 : n.notable ? 17 : 11, '#070b18');
       } else {
         g.fillStyle = '#141a30';
         g.beginPath(); g.arc(n.x, n.y, r, 0, TAU); g.fill();
         g.strokeStyle = avail ? col : 'rgba(120,130,160,0.4)';
         g.lineWidth = avail ? 3 : 1.5;
         g.beginPath(); g.arc(n.x, n.y, r, 0, TAU); g.stroke();
-        drawGlyph(g, nodeIcon(n), n.x, n.y, n.start ? 20 : n.notable ? 17 : 11, avail ? col : 'rgba(120,130,160,0.55)');
+        if (!drawNodeImg(g, n, n.x, n.y, r * 1.6)) drawGlyph(g, nodeIcon(n), n.x, n.y, n.start ? 20 : n.notable ? 17 : 11, avail ? col : 'rgba(120,130,160,0.55)');
       }
       if (n.notable && !n.gate) {
         g.strokeStyle = owned ? '#fff' : col;
@@ -2794,21 +2861,21 @@ window.__game = (function () {
       var r = n.evo ? 30 : n.root ? 20 : 13;
       if (n.evo) {
         drawDiamond(g, n.x, n.y, r + 4, owned ? '#ffd700' : '#141a30', owned ? '#fff' : avail ? '#ffd700' : 'rgba(120,130,160,0.4)', owned || avail ? 3 : 1.5);
-        drawGlyph(g, nodeIcon(n), n.x, n.y, 26, owned ? '#070b18' : '#ffd700');
+        if (!drawNodeImg(g, n, n.x, n.y, 44)) drawGlyph(g, nodeIcon(n), n.x, n.y, 26, owned ? '#070b18' : '#ffd700');
         g.fillStyle = owned ? '#ffd700' : 'rgba(200,200,220,0.75)';
         g.font = 'bold 12px Verdana,sans-serif';
         g.fillText(n.name, n.x, n.y - r - 13);
       } else if (owned) {
         g.fillStyle = col;
         g.beginPath(); g.arc(n.x, n.y, r, 0, TAU); g.fill();
-        drawGlyph(g, nodeIcon(n), n.x, n.y, n.root ? 18 : 12, '#070b18');
+        if (!drawNodeImg(g, n, n.x, n.y, r * 1.6)) drawGlyph(g, nodeIcon(n), n.x, n.y, n.root ? 18 : 12, '#070b18');
       } else {
         g.fillStyle = '#141a30';
         g.beginPath(); g.arc(n.x, n.y, r, 0, TAU); g.fill();
         g.strokeStyle = avail ? col : 'rgba(120,130,160,0.4)';
         g.lineWidth = avail ? 3 : 1.5;
         g.beginPath(); g.arc(n.x, n.y, r, 0, TAU); g.stroke();
-        drawGlyph(g, nodeIcon(n), n.x, n.y, n.root ? 18 : 12, avail ? col : 'rgba(120,130,160,0.55)');
+        if (!drawNodeImg(g, n, n.x, n.y, r * 1.6)) drawGlyph(g, nodeIcon(n), n.x, n.y, n.root ? 18 : 12, avail ? col : 'rgba(120,130,160,0.55)');
       }
       if (wtSel === n.id || wtHover === n.id) {
         g.strokeStyle = '#fff';
@@ -2842,6 +2909,33 @@ window.__game = (function () {
 
   // ---------- selftest (#selftest): página real, entradas reais, 1 passada ----------
   var SELFTEST = (typeof location !== 'undefined' && location.hash === '#selftest');
+  var SHOT = (typeof location !== 'undefined' && location.hash === '#shot-tree') ? 'tree' :
+    (typeof location !== 'undefined' && location.hash === '#shot-wtree') ? 'wtree' : null;
+  function runShot() {
+    meta.tree.points = 300;
+    var guard = 0;
+    while (guard++ < 50) {
+      var cands = window.TreeData.nodes.filter(function (nd) {
+        if (meta.tree.owned.indexOf(nd.id) >= 0) return false;
+        if (nd.reqPoints && treeSpent() < nd.reqPoints) return false;
+        var ad = window.TreeData.adj[nd.id] || [], ai;
+        for (ai = 0; ai < ad.length; ai++) if (meta.tree.owned.indexOf(ad[ai]) >= 0) return true;
+        return false;
+      });
+      if (!cands.length || !treeBuy(cands[0].id)) break;
+    }
+    var gi;
+    for (gi = 0; gi < ALL_WEAPONS.length; gi++) {
+      if (meta.tree.owned.indexOf('gate-' + ALL_WEAPONS[gi]) < 0) meta.tree.owned.push('gate-' + ALL_WEAPONS[gi]);
+    }
+    openTree();
+    if (SHOT === 'wtree') {
+      meta.wtree.points = 30;
+      var wb = ['bolt-root', 'bolt-t1-0', 'bolt-t1-1', 'bolt-t1-2', 'bolt-t1-3', 'bolt-t2-0', 'bolt-t2-1'], bi;
+      for (bi = 0; bi < wb.length; bi++) wtreeBuy('bolt', wb[bi]);
+      openWTree('bolt');
+    }
+  }
   function runSelftest() {
     var errs = [];
     window.addEventListener('error', function (e) { errs.push(String((e && e.message) || e)); });
@@ -3012,6 +3106,8 @@ window.__game = (function () {
       el.tclose.click();
       click('btn-start');
       assert(state.bolt.count >= 3, 'evo not applied');
+      var chipSpr = el.chips ? el.chips.querySelector('.spr') : null;
+      assert(chipSpr !== null, 'chip sprite not wired');
       step(60, 30);
       assert(errs.length === 0, 'js errors: ' + errs.slice(0, 2).join(' / '));
       done(true, 'run tree weapons mage art mile gate wtree evo frames=' + frames);
@@ -3051,6 +3147,14 @@ window.__game = (function () {
       ic.className = 'ic';
       ic.textContent = dd[1];
       ic.style.color = dd[2];
+      if (dd[0] !== 'dash' && WPOS[dd[0]] && typeof Image !== 'undefined') {
+        var sp = document.createElement('div');
+        sp.className = 'spr';
+        sp.style.cssText = 'position:absolute;left:13px;top:2px;width:30px;height:30px;' +
+          'background-image:url(icons/weapons.png);background-size:150px 60px;' +
+          'background-position:' + (-WPOS[dd[0]][0] * 30) + 'px ' + (-WPOS[dd[0]][1] * 30) + 'px;background-repeat:no-repeat;';
+        box.appendChild(sp);
+      }
       var lv = document.createElement('div');
       lv.className = 'lv';
       box.appendChild(cd);
@@ -3252,6 +3356,8 @@ window.__game = (function () {
 
   if (SELFTEST) {
     document.addEventListener('DOMContentLoaded', function () { if (init(false)) runSelftest(); });
+  } else if (SHOT) {
+    document.addEventListener('DOMContentLoaded', function () { if (init(false)) runShot(); });
   } else if (typeof document !== 'undefined' && document.readyState !== undefined) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { init(true); });
     else init(true);
