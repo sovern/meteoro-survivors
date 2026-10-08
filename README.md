@@ -46,8 +46,8 @@ Zerou as 10 fases? O **modo infinito** continua escalando pra sempre.
 
 | Arma | Estilo | Evolução |
 |---|---|---|
-| Raio | Disparo automático no mais próximo | Tempestade de Lâminas |
-| Meteoro | Cai na maior concentração de inimigos | Chuva Ígnea (queima o chão) |
+| Raio | Disparo automático no mais próximo (arma inicial) | Tempestade de Lâminas |
+| Meteoro | Cai na maior concentração de inimigos (desbloqueável) | Chuva Ígnea (queima o chão) |
 | Orbe orbital | Gira em volta de você | Sistema Planetário |
 | Cadeia de raios | Pula entre inimigos | Julgamento Final |
 | Nova arcana | Explosão periódica ao redor | Big Bang |

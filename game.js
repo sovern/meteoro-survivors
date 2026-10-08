@@ -281,7 +281,7 @@ window.__game = (function () {
     state.strikes.length = 0; state.scorch.length = 0; state.ghosts.length = 0;
     state.zaps.length = 0; state.beams.length = 0; state.rings.length = 0;
     state.bolt = { dmg: 10 * (1 + tb.boltDmg), rate: 2.2 * (1 + tb.boltRate), cd: 0, count: 1 + tb.boltCount, pierce: tb.boltPierce, speed: 560 };
-    state.meteor = { dmg: 46 * (1 + tb.meteorDmg), cdMax: Math.max(1.2, 4.5 * (1 - tb.meteorRate)), cd: 2.5, radius: 112 * (1 + tb.meteorR), count: 1 + (tb.meteorCount || 0) };
+    state.meteor = { unlocked: false, dmg: 46 * (1 + tb.meteorDmg), cdMax: Math.max(1.2, 4.5 * (1 - tb.meteorRate)), cd: 2.5, radius: 112 * (1 + tb.meteorR), count: 1 + (tb.meteorCount || 0) };
     state.orb = { unlocked: false, count: tb.orbCount, dmg: 14 * (1 + tb.orbDmg), radius: 80 * (1 + tb.orbR), angle: 0 };
     state.chain = { unlocked: false, dmg: 26 * (1 + tb.chainDmg), cd: 0, cdMax: Math.max(0.8, 2.3 * (1 - tb.chainRate)), jumps: 3 + tb.chainJump, range: 520 };
     state.nova = { unlocked: false, dmg: 34 * (1 + tb.novaDmg), cd: 0, cdMax: Math.max(1.5, 5.5 * (1 - tb.novaRate)), radius: 170 * (1 + tb.novaR) };
@@ -477,13 +477,13 @@ window.__game = (function () {
       x = clamp(p.x + Math.cos(ang) * rad, 30, WORLD.w - 30);
       y = clamp(p.y + Math.sin(ang) * rad, 30, WORLD.h - 30);
     }
-    var elite = forceType === undefined && state.time > 150 && rr() < 0.04 + state.time / 6000;
-    var hpm = S.hpMul * Math.pow(1.8, loops) * (1 + state.time / 110 + (threat() - 1) * 0.15) * (elite ? 9 : 1);
+    var elite = forceType === undefined && state.time > 90 && rr() < 0.05 + state.time / 5000;
+    var hpm = S.hpMul * Math.pow(1.8, loops) * (1 + state.time / 85 + (threat() - 1) * 0.2) * (elite ? 9 : 1);
     var e = {
       type: type, x: x, y: y,
       hp: B.hp * hpm, maxhp: B.hp * hpm,
-      speed: B.spd * (1 + S.spdAdd + Math.min(0.5, state.time / 600)) * (elite ? 0.85 : 1),
-      dmg: Math.round(B.dmg * S.dmgMul * Math.pow(1.4, loops) * (1 + state.time / 240) * (elite ? 1.6 : 1)),
+      speed: B.spd * (1 + S.spdAdd + Math.min(0.5, state.time / 500)) * (elite ? 0.85 : 1),
+      dmg: Math.round(B.dmg * S.dmgMul * Math.pow(1.4, loops) * (1 + state.time / 180) * (elite ? 1.6 : 1)),
       r: B.r * (elite ? 2.3 : 1),
       xp: Math.max(1, Math.round(B.xp * S.xpMul * (elite ? 8 : 1))),
       coins: elite ? 15 : B.coins,
@@ -541,8 +541,8 @@ window.__game = (function () {
     }
     state.spawnT -= dt;
     if (state.spawnT > 0 || state.enemies.length >= MAXE) return;
-    state.spawnT = Math.max(0.22, 1.05 - state.time * 0.004);
-    var batch = 1 + Math.floor(state.time / 45), i;
+    state.spawnT = Math.max(0.18, 0.75 - state.time * 0.004);
+    var batch = 2 + Math.floor(state.time / 35), i;
     for (i = 0; i < batch && state.enemies.length < MAXE; i++) spawnEnemy();
   }
 
@@ -911,9 +911,10 @@ window.__game = (function () {
     { id: 'brate', w: 'bolt', rar: 0, name: 'Gatilho rápido', desc: '+18% velocidade de disparo', max: 8, apply: function () { state.bolt.rate *= 1.18; } },
     { id: 'multi', w: 'bolt', rar: 1, name: 'Raio duplo', desc: '+1 projétil por disparo', max: 3, min: 3, apply: function () { state.bolt.count++; } },
     { id: 'pierce', w: 'bolt', rar: 0, name: 'Raio perfurante', desc: 'projéteis atravessam +1 inimigo', max: 3, apply: function () { state.bolt.pierce++; } },
-    { id: 'mdmg', w: 'meteor', rar: 0, name: 'Meteoros pesados', desc: '+40% dano do meteoro', max: 8, apply: function () { state.meteor.dmg *= 1.4; } },
-    { id: 'mrate', w: 'meteor', rar: 0, name: 'Chuva constante', desc: '-12% recarga do meteoro', max: 6, apply: function () { state.meteor.cdMax *= 0.88; } },
-    { id: 'msize', w: 'meteor', rar: 1, name: 'Cratera larga', desc: '+22% raio do meteoro', max: 4, apply: function () { state.meteor.radius *= 1.22; } },
+    { id: 'meteor', w: 'meteor', rar: 2, name: 'Chuva de meteoros', desc: 'NOVO: meteoros caem na maior concentração', max: 1, min: 2, apply: function () { state.meteor.unlocked = true; } },
+    { id: 'mdmg', w: 'meteor', rar: 0, name: 'Meteoros pesados', desc: '+40% dano do meteoro', max: 8, req: 'meteor', apply: function () { state.meteor.dmg *= 1.4; } },
+    { id: 'mrate', w: 'meteor', rar: 0, name: 'Chuva constante', desc: '-12% recarga do meteoro', max: 6, req: 'meteor', apply: function () { state.meteor.cdMax *= 0.88; } },
+    { id: 'msize', w: 'meteor', rar: 1, name: 'Cratera larga', desc: '+22% raio do meteoro', max: 4, req: 'meteor', apply: function () { state.meteor.radius *= 1.22; } },
     { id: 'orb', w: 'orb', rar: 2, name: 'Orbe orbital', desc: 'NOVO: orbe que gira e queima quem encosta', max: 1, min: 4, apply: function () { state.orb.unlocked = true; if (state.orb.count < 1) state.orb.count = 1; } },
     { id: 'orb2', w: 'orb', rar: 1, name: 'Orbe gêmeo', desc: '+1 orbe orbital', max: 2, req: 'orb', apply: function () { state.orb.count++; } },
     { id: 'orbd', w: 'orb', rar: 0, name: 'Orbes incandescentes', desc: '+40% dano dos orbes', max: 6, req: 'orb', apply: function () { state.orb.dmg *= 1.4; } },
@@ -1130,8 +1131,10 @@ window.__game = (function () {
     B.cd -= dt;
     if (B.cd <= 0) { B.cd = fireBolt() ? 1 / B.rate : 0.25; }
     var M = state.meteor;
-    M.cd -= dt;
-    if (M.cd <= 0) { M.cd = callMeteor() ? M.cdMax : 0.5; }
+    if (M.unlocked) {
+      M.cd -= dt;
+      if (M.cd <= 0) { M.cd = callMeteor() ? M.cdMax : 0.5; }
+    }
     if (state.orb.unlocked || state.orb.count > 0) state.orb.angle += 2.5 * dt;
     var C = state.chain;
     if (C.unlocked) {
@@ -1683,7 +1686,7 @@ window.__game = (function () {
 
   // ---------- HUD / menus ----------
   function weaponOwned(w) {
-    if (w === 'bolt' || w === 'meteor') return true;
+    if (w === 'bolt') return true;
     if (w === 'orb') return state.orb.unlocked || state.orb.count > 0;
     if (state[w]) return !!state[w].unlocked;
     return false;
@@ -3018,6 +3021,8 @@ window.__game = (function () {
       assert(state.boss, 'boss did not spawn');
       assert(el.bossbar.style.display === 'block', 'bossbar hidden');
       var bhp = state.boss.hp;
+      state.boss.x = state.player.x + 300; state.boss.y = state.player.y;
+      state.enemies.length = 0; state.enemies.push(state.boss);
       state.player.hp = state.player.maxhp = 100000;
       step(600, 60);
       assert(state.boss.hp < bhp, 'weapons never damaged boss');
@@ -3045,6 +3050,12 @@ window.__game = (function () {
       click('btn-again');
       assert(state.started && !state.over && state.kills === 0, 'restart failed');
       step(60, 30);
+      assert(!state.meteor.unlocked, 'meteor starts unlocked');
+      var mui;
+      for (mui = 0; mui < UPS.length; mui++) if (UPS[mui].id === 'meteor') UPS[mui].apply();
+      assert(state.meteor.unlocked, 'meteor unlock failed');
+      step(300, 0);
+      assert(state.stats.meteor > 0, 'meteor never fell');
       state.player.hp = state.player.maxhp = 5000;
       state.miss.unlocked = state.frost.unlocked = state.mine.unlocked = state.rang.unlocked = true;
       var si;
