@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+evals/
+ga.log
+data.jsonl
+dagger*.jsonl
+agg*.jsonl
