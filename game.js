@@ -48,6 +48,7 @@ window.__game = (function () {
   function endlessLoops() { return Math.floor((state.stage - 1) / window.StageData.count); }
 
   // ---------- meta v2 (migra v1) ----------
+  var META_KEY = 'meteoro_meta_v2';
   var meta = {
     coins: 0, best: { time: 0, kills: 0, level: 1, stage: 1 },
     tree: { points: 0, owned: ['start'], bought: 0 },
@@ -58,7 +59,7 @@ window.__game = (function () {
   function metaLoad() {
     try {
       if (typeof localStorage === 'undefined') return;
-      var raw = localStorage.getItem('meteoro_meta_v2');
+      var raw = localStorage.getItem(META_KEY);
       if (raw) {
         var m = JSON.parse(raw);
         if (m && typeof m.coins === 'number') meta.coins = m.coins;
@@ -98,7 +99,7 @@ window.__game = (function () {
   function metaSave() {
     try {
       if (typeof localStorage === 'undefined') return;
-      localStorage.setItem('meteoro_meta_v2', JSON.stringify(meta));
+      localStorage.setItem(META_KEY, JSON.stringify(meta));
     } catch (e) { /* noop */ }
   }
 
@@ -478,12 +479,12 @@ window.__game = (function () {
       y = clamp(p.y + Math.sin(ang) * rad, 30, WORLD.h - 30);
     }
     var elite = forceType === undefined && state.time > 90 && rr() < 0.05 + state.time / 5000;
-    var hpm = S.hpMul * Math.pow(1.8, loops) * (1 + state.time / 85 + (threat() - 1) * 0.2) * (elite ? 9 : 1);
+    var hpm = S.hpMul * Math.pow(1.8, loops) * (1 + state.time / 95 + (threat() - 1) * 0.2) * (elite ? 9 : 1);
     var e = {
       type: type, x: x, y: y,
       hp: B.hp * hpm, maxhp: B.hp * hpm,
       speed: B.spd * (1 + S.spdAdd + Math.min(0.5, state.time / 500)) * (elite ? 0.85 : 1),
-      dmg: Math.round(B.dmg * S.dmgMul * Math.pow(1.4, loops) * (1 + state.time / 180) * (elite ? 1.6 : 1)),
+      dmg: Math.round(B.dmg * S.dmgMul * Math.pow(1.4, loops) * (1 + state.time / 200) * (elite ? 1.6 : 1)),
       r: B.r * (elite ? 2.3 : 1),
       xp: Math.max(1, Math.round(B.xp * S.xpMul * (elite ? 8 : 1))),
       coins: elite ? 15 : B.coins,
@@ -540,10 +541,11 @@ window.__game = (function () {
       state.prevThreat = th;
     }
     state.spawnT -= dt;
-    if (state.spawnT > 0 || state.enemies.length >= MAXE) return;
-    state.spawnT = Math.max(0.18, 0.75 - state.time * 0.004);
-    var batch = 2 + Math.floor(state.time / 35), i;
-    for (i = 0; i < batch && state.enemies.length < MAXE; i++) spawnEnemy();
+    if (state.spawnT > 0 || state.enemies.length >= Math.min(MAXE, 80 + state.time)) return;
+    state.spawnT = Math.max(0.2, 1.0 - state.time * 0.0035);
+    var batch = 2 + Math.floor(state.time / 50), i;
+    var cap = Math.min(MAXE, 80 + state.time);
+    for (i = 0; i < batch && state.enemies.length < cap; i++) spawnEnemy();
   }
 
   // ---------- combat ----------
@@ -599,6 +601,12 @@ window.__game = (function () {
     meta.stats.bosses++;
     metaSave();
     checkMiles();
+    var bi;
+    for (bi = state.enemies.length - 1; bi >= 0; bi--) {
+      var be = state.enemies[bi];
+      if (be === e || be.boss || be.elite || be.spawnT > 0) continue;
+      killEnemy(be);
+    }
     banner(e.bname + ' ABATIDO! +1 PONTO');
     sfx.level();
     if (state.stage >= window.StageData.count && !state.endless) {
@@ -982,12 +990,34 @@ window.__game = (function () {
       state.choices.push(pool[j]);
       pool.splice(j, 1);
     }
+    if (state.choices.length > 0 && weaponsUnlocked() < 4) {
+      var hasUn = false, ui;
+      for (ui = 0; ui < state.choices.length; ui++) {
+        if (isUnlockCard(state.choices[ui])) { hasUn = true; break; }
+      }
+      if (!hasUn) {
+        var uns = pool.filter(isUnlockCard);
+        if (uns.length > 0) {
+          var pick = uns[(rr() * uns.length) | 0];
+          pool.splice(pool.indexOf(pick), 1);
+          var slot = (rr() * state.choices.length) | 0;
+          pool.push(state.choices[slot]);
+          state.choices[slot] = pick;
+        }
+      }
+    }
     if (state.choices.length === 0) {
       state.player.hp = state.player.maxhp;
       state.levelPending = 0;
       closeLevelUp();
       toast('Build completa! Vida cheia.');
     }
+  }
+  function isUnlockCard(u) { return u.w !== 'util' && u.max === 1 && !u.req; }
+  function weaponsUnlocked() {
+    var n = 1, i;
+    for (i = 0; i < ALL_WEAPONS.length; i++) if (ALL_WEAPONS[i] !== 'bolt' && weaponOwned(ALL_WEAPONS[i])) n++;
+    return n;
   }
   function chooseUpgrade(i) {
     var u = state.choices[i];
@@ -1094,7 +1124,7 @@ window.__game = (function () {
       damageEnemy(from, dmg * 0.3 * state.thorns, 0, 0, false);
     }
     p.hp -= dmg;
-    p.inv = 0.7;
+    p.inv = 0.9;
     state.hurtFlash = 0.5;
     addShake(0.3);
     sfx.hurt();
@@ -2910,6 +2940,200 @@ window.__game = (function () {
     }
   }
 
+  // ---------- bot jogável (#bot): foge, pega XP, dashea, progride sozinho ----------
+  var BOT = (typeof location !== 'undefined' && location.hash === '#bot');
+  var botSessions = 0, botSpeed = 8, botDone = false, botTickCap = 0, botBar = null;
+  var BOT_MAX_SESSIONS = 1000, BOT_TICK_CAP = 54000;
+  var BOT_PRIO = ['meteor', 'orb', 'chain', 'miss', 'frost', 'nova', 'mine', 'rail', 'rang',
+    'multi', 'pierce', 'bdmg', 'brate', 'mdmg', 'mrate', 'msize', 'orb2', 'orbd',
+    'chainj', 'chaind', 'chainr', 'novad', 'novas', 'novar', 'raild', 'railr',
+    'missc', 'missd', 'missr', 'frostd', 'frostr', 'frosts', 'minec', 'mined', 'miner',
+    'rangc', 'rangd', 'rangr',
+    'vit', 'regen', 'swift', 'mag', 'crit', 'dash', 'thorns', 'exec', 'wis', 'greed', 'wind'];
+  function botPrio(id) { var i = BOT_PRIO.indexOf(id); return i < 0 ? 999 : i; }
+  function botTick() {
+    var S = state, p = S.player, i;
+    var guard = 0;
+    while (S.levelPending > 0 && guard++ < 8) {
+      var bi = 0;
+      for (i = 1; i < S.choices.length; i++) {
+        if (botPrio(S.choices[i].id) < botPrio(S.choices[bi].id)) bi = i;
+      }
+      chooseUpgrade(bi);
+    }
+    if (!p || S.over) return;
+    var fx = 0, fy = 0, near = 1e9;
+    var ds = [];
+    for (i = 0; i < S.enemies.length; i++) {
+      var e = S.enemies[i];
+      if (e.spawnT > 0) continue;
+      var edx = p.x - e.x, edy = p.y - e.y;
+      var dd = Math.sqrt(edx * edx + edy * edy) || 1;
+      if (dd < near) near = dd;
+      ds.push([dd, e, edx, edy]);
+    }
+    ds.sort(function (a, b) { return a[0] - b[0]; });
+    var K = Math.min(8, ds.length);
+    for (i = 0; i < K; i++) {
+      var d = ds[i][0], de = ds[i][1], dx = ds[i][2], dy = ds[i][3];
+      var R = de.boss ? 420 : 300;
+      if (d < R) {
+        var w = (R - d) / R;
+        w *= w * (de.boss ? 4 : 3);
+        fx += (dx / d) * w;
+        fy += (dy / d) * w;
+      }
+    }
+    for (i = 0; i < S.eshots.length; i++) {
+      var s = S.eshots[i];
+      var sx = p.x - s.x, sy = p.y - s.y;
+      var sd = Math.sqrt(sx * sx + sy * sy) || 1;
+      if (sd < 170) {
+        var sw = ((170 - sd) / 170) * 2;
+        fx += (sx / sd) * sw;
+        fy += (sy / sd) * sw;
+      }
+    }
+    var M = 180, W = WORLD.w;
+    if (p.x < M) fx += (M - p.x) / M * 2;
+    if (p.x > W - M) fx -= (p.x - (W - M)) / M * 2;
+    if (p.y < M) fy += (M - p.y) / M * 2;
+    if (p.y > W - M) fy -= (p.y - (W - M)) / M * 2;
+    if (S.portal) {
+      var pdx = S.portal.x - p.x, pdy = S.portal.y - p.y;
+      var pd = Math.sqrt(pdx * pdx + pdy * pdy) || 1;
+      var pw = pd < 200 ? 5 : 2.2;
+      fx += (pdx / pd) * pw;
+      fy += (pdy / pd) * pw;
+    } else if (near > 170) {
+      var bg = null, bd = 900 * 900;
+      for (i = 0; i < S.gems.length; i++) {
+        var g = S.gems[i];
+        var gd = d2(p.x, p.y, g.x, g.y);
+        if (gd < bd) { bd = gd; bg = g; }
+      }
+      if (bg) {
+        var bl = Math.sqrt(bd) || 1;
+        fx += ((bg.x - p.x) / bl) * 1.2;
+        fy += ((bg.y - p.y) / bl) * 1.2;
+      }
+    }
+    var fl = Math.sqrt(fx * fx + fy * fy);
+    if (fl > 0.3 && near < 280) {
+      var tx = -fy / fl, ty = fx / fl;
+      fx += tx * 1.1;
+      fy += ty * 1.1;
+    }
+    keys.KeyD = fx > 0.12;
+    keys.KeyA = fx < -0.12;
+    keys.KeyS = fy > 0.12;
+    keys.KeyW = fy < -0.12;
+    if (p.dashCd <= 0 && S.time > 1 && (near < 140 || (S.portal && near < 220))) {
+      var best = 2, bscore = -1e9, a;
+      for (a = 0; a < 8; a++) {
+        var ang = (a / 8) * TAU;
+        var ax = Math.cos(ang), ay = Math.sin(ang);
+        var score = 0, ei;
+        for (ei = 0; ei < S.enemies.length; ei++) {
+          var ee = S.enemies[ei];
+          if (ee.spawnT > 0) continue;
+          var rx = ee.x - p.x, ry = ee.y - p.y;
+          var along = rx * ax + ry * ay;
+          if (along < 0 || along > 500) continue;
+          var side = Math.abs(rx * ay - ry * ax);
+          if (side < 90) score -= (1 - along / 500) * (ee.boss ? 3 : 1);
+        }
+        if (S.portal) {
+          var qx = S.portal.x - p.x, qy = S.portal.y - p.y;
+          var ql = Math.sqrt(qx * qx + qy * qy) || 1;
+          score += (ax * qx / ql + ay * qy / ql) * 1.5;
+        }
+        var nx = p.x + ax * 400, ny = p.y + ay * 400;
+        if (nx < 120 || nx > WORLD.w - 120 || ny < 120 || ny > WORLD.h - 120) score -= 2;
+        if (score > bscore) { bscore = score; best = a; }
+      }
+      var bang = (best / 8) * TAU;
+      keys.KeyD = Math.cos(bang) > 0.3;
+      keys.KeyA = Math.cos(bang) < -0.3;
+      keys.KeyS = Math.sin(bang) > 0.3;
+      keys.KeyW = Math.sin(bang) < -0.3;
+      tryDash();
+    }
+  }
+  function botSpend() {
+    var g = 0;
+    while (meta.tree.points > 0 && g++ < 300) {
+      var owned = meta.tree.owned;
+      var cands = window.TreeData.nodes.filter(function (nd) {
+        if (owned.indexOf(nd.id) >= 0) return false;
+        if (nd.reqPoints && treeSpent() < nd.reqPoints) return false;
+        var ad = window.TreeData.adj[nd.id] || [], ai;
+        for (ai = 0; ai < ad.length; ai++) if (owned.indexOf(ad[ai]) >= 0) return true;
+        return false;
+      });
+      if (!cands.length) break;
+      cands.sort(function (a, b) {
+        return (b.gate ? 2 : b.notable ? 1 : 0) - (a.gate ? 2 : a.notable ? 1 : 0);
+      });
+      if (!treeBuy(cands[0].id)) break;
+    }
+    var b2 = 0;
+    while (meta.coins > 300 && b2++ < 50) { if (!buyPoint()) break; }
+    var order = ['bolt'], wi;
+    for (wi = 0; wi < ALL_WEAPONS.length; wi++) {
+      if (ALL_WEAPONS[wi] !== 'bolt' && gateOpen(ALL_WEAPONS[wi])) order.push(ALL_WEAPONS[wi]);
+    }
+    var progressed = true, guard2 = 0;
+    while (meta.wtree.points > 0 && progressed && guard2++ < 200) {
+      progressed = false;
+      for (wi = 0; wi < order.length; wi++) {
+        var w = order[wi];
+        if (!gateOpen(w)) continue;
+        var nodes = window.WTreeData.trees[w].nodes, ni;
+        for (ni = 0; ni < nodes.length; ni++) {
+          if (!wtreeAvail(w, nodes[ni].id)) continue;
+          var wn = window.WTreeData.byId(w, nodes[ni].id);
+          if (meta.wtree.points >= (wn.cost || 1) && wtreeBuy(w, nodes[ni].id)) progressed = true;
+        }
+      }
+    }
+    var arts = ['manopla', 'dado', 'coracao', 'luneta', 'moeda', 'pena', 'bussola', 'relogio'], ai2;
+    for (ai2 = 0; ai2 < arts.length; ai2++) {
+      if (meta.artUnlocked[arts[ai2]]) { meta.art = arts[ai2]; break; }
+    }
+    metaSave();
+  }
+  function botFrame(dt) {
+    if (botDone) { update(dt); return; }
+    for (var i = 0; i < botSpeed; i++) {
+      if (!state.started || state.over) break;
+      botTick();
+      update(dt);
+      botTickCap++;
+      if (state.won && !state.endless) continueEndless();
+      if (state.over || botTickCap >= BOT_TICK_CAP) { endBotSession(); break; }
+    }
+    if (botBar) {
+      var p = state.player;
+      botBar.textContent = 'BOT sessão ' + (botSessions + 1) + '/' + BOT_MAX_SESSIONS +
+        ' · F' + state.stage + ' · ' + fmtTime(state.time) +
+        (p ? ' · nv' + p.level + ' · ' + Math.ceil(p.hp) + '/' + p.maxhp : '') +
+        ' · x' + botSpeed + ' ([ ] velocidade)';
+    }
+  }
+  function endBotSession() {
+    botSessions++;
+    bankCoins();
+    botSpend();
+    botTickCap = 0;
+    if (botSessions >= BOT_MAX_SESSIONS) {
+      botDone = true;
+      banner('1000 SESSÕES COMPLETAS');
+      return;
+    }
+    startRun();
+  }
+
   // ---------- selftest (#selftest): página real, entradas reais, 1 passada ----------
   var SELFTEST = (typeof location !== 'undefined' && location.hash === '#selftest');
   var SHOT = (typeof location !== 'undefined' && location.hash === '#shot-tree') ? 'tree' :
@@ -3182,7 +3406,8 @@ window.__game = (function () {
     if (!(dt > 0)) dt = 0.016;
     if (dt > 0.05) dt = 0.05;
     try {
-      update(dt);
+      if (BOT) botFrame(dt);
+      else update(dt);
       render();
     } catch (e) {
       if (el.toast) { el.toast.textContent = 'Erro: ' + e.message; el.toast.style.opacity = '1'; }
@@ -3269,6 +3494,8 @@ window.__game = (function () {
         if (c === 'Space' && state.started && !state.over && !state.paused) tryDash();
         if ((c === 'KeyP' || c === 'Escape') && state.started) togglePause();
         if (c === 'KeyM') toggleMute();
+        if (BOT && c === 'BracketRight') { botSpeed = Math.min(64, botSpeed * 2); }
+        if (BOT && c === 'BracketLeft') { botSpeed = Math.max(1, botSpeed / 2); }
         if (state.levelPending > 0 && (c === 'Digit1' || c === 'Digit2' || c === 'Digit3')) {
           chooseUpgrade(parseInt(c.slice(-1), 10) - 1);
         }
@@ -3369,6 +3596,27 @@ window.__game = (function () {
     document.addEventListener('DOMContentLoaded', function () { if (init(false)) runSelftest(); });
   } else if (SHOT) {
     document.addEventListener('DOMContentLoaded', function () { if (init(false)) runShot(); });
+  } else if (BOT) {
+    document.addEventListener('DOMContentLoaded', function () {
+      META_KEY = 'meteoro_meta_bot';
+      if (!init(true)) return;
+      try {
+        localStorage.removeItem(META_KEY);
+        meta.coins = 0;
+        meta.tree = { points: 0, owned: ['start'], bought: 0 };
+        meta.wtree = { points: 0, owned: {} };
+        meta.mage = 'mago'; meta.art = null; meta.artUnlocked = {};
+        meta.stats = { kills: 0, coins: 0, maxLevel: 1, maxStage: 1, stages: 0, bosses: 0, maxTime: 0, wins: 0 };
+        meta.best = { time: 0, kills: 0, level: 1, stage: 1 };
+      } catch (e) { /* fresh o suficiente */ }
+      state.muted = true;
+      if (el.sound) el.sound.textContent = 'SOM: OFF';
+      botBar = document.createElement('div');
+      botBar.style.cssText = 'position:fixed;top:30px;left:50%;transform:translateX(-50%);z-index:7;background:rgba(8,12,24,0.85);border:1px solid #ffb300;border-radius:6px;padding:5px 14px;font-size:13px;pointer-events:none;white-space:nowrap;';
+      document.body.appendChild(botBar);
+      try { if (typeof document.hasFocus === 'function' && !document.hasFocus() && window.focus) window.focus(); } catch (x) { /* noop */ }
+      startRun();
+    });
   } else if (typeof document !== 'undefined' && document.readyState !== undefined) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { init(true); });
     else init(true);
@@ -3383,7 +3631,8 @@ window.__game = (function () {
     buyPoint: buyPoint, renderTree: renderTree, renderWTree: renderWTree, checkMiles: checkMiles,
     nextStage: nextStage, continueEndless: continueEndless,
     state: state, keys: keys, meta: function () { return meta; },
-    debug: { spawn: spawnEnemy, hurt: damageEnemy, boss: spawnBoss },
+    debug: { spawn: spawnEnemy, hurt: damageEnemy, boss: spawnBoss, seed: function (s) { rng = mulberry32(s >>> 0); } },
+    botTick: botTick, botSpend: botSpend, bankCoins: bankCoins, botFrame: botFrame, endBotSession: endBotSession,
     version: '0.4.0'
   };
 })();
