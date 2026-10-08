@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>METEORO — survivors incremental</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b1020; }
+  body { font-family: Verdana, Geneva, sans-serif; color: #fff; }
+  #game { position: absolute; inset: 0; display: block; }
+  #hud { position: absolute; top: 0; left: 0; right: 0; z-index: 5; pointer-events: none; display: none; }
+  #xpbar { height: 10px; background: #1a2340; border-bottom: 1px solid #334; }
+  #xpfill { height: 100%; width: 0%; background: #2ecc40; }
+  #bossbar { height: 16px; background: #20090c; border-bottom: 1px solid #e63946; display: none; position: relative; }
+  #bossfill { height: 100%; width: 100%; background: #e63946; }
+  #bossname { position: absolute; top: 0; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: bold; line-height: 16px; letter-spacing: 2px; }
+  #hudrow { display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 12px; }
+  .chip { background: rgba(8, 12, 24, 0.8); border: 1px solid rgba(255,255,255,0.16); border-radius: 6px; padding: 6px 12px; font-size: 14px; }
+  #hpwrap { width: 230px; height: 16px; background: #3a0f14; border: 1px solid #777; border-radius: 4px; margin-top: 4px; overflow: hidden; position: relative; }
+  #hpfill { height: 100%; width: 100%; background: #e63946; }
+  #hptext { position: absolute; top: 0; left: 0; right: 0; text-align: center; font-size: 11px; line-height: 16px; font-weight: bold; }
+  #stage { color: #ffb300; font-weight: bold; font-size: 13px; margin-top: 4px; }
+  #stats { text-align: right; line-height: 1.5; }
+  #stats b { color: #ffb300; }
+  #coins { color: #ffd700; font-weight: bold; }
+  #build { position: absolute; top: 150px; left: 12px; z-index: 5; max-width: 210px; font-size: 11px; line-height: 1.6; pointer-events: none; }
+  #minimap { position: absolute; bottom: 12px; right: 12px; width: 132px; height: 132px; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; z-index: 5; background: #070b18; }
+  #chips { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); gap: 8px; z-index: 5; pointer-events: none; }
+  .wchip { width: 56px; height: 56px; background: rgba(8,12,24,0.85); border: 1px solid #557; border-radius: 8px; position: relative; overflow: hidden; text-align: center; }
+  .wchip .ic { font-size: 20px; line-height: 34px; font-weight: bold; }
+  .wchip .lv { font-size: 10px; color: #ffb300; line-height: 12px; }
+  .wchip .cd { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); height: 0%; }
+  .wchip.locked { opacity: 0.35; }
+  .wchip.locked .ic { color: #666; }
+  #banner {
+    position: absolute; top: 22%; left: 0; right: 0; text-align: center; z-index: 6;
+    font-size: 30px; font-weight: bold; letter-spacing: 4px; color: #ffb300;
+    text-shadow: 0 2px 0 #000, 0 0 24px rgba(255,179,0,0.5);
+    opacity: 0; transition: opacity 0.5s; pointer-events: none;
+  }
+  #toast {
+    position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+    background: rgba(8, 12, 24, 0.9); border: 1px solid #ffb300; border-radius: 6px;
+    padding: 8px 18px; font-size: 14px; z-index: 6; opacity: 0;
+    transition: opacity 0.4s; pointer-events: none; white-space: nowrap;
+  }
+  .overlay {
+    position: absolute; inset: 0; z-index: 10; display: flex;
+    align-items: center; justify-content: center; background: rgba(4, 6, 14, 0.9);
+  }
+  .card {
+    background: #11182e; border: 2px solid #ffb300; border-radius: 8px;
+    padding: 26px 30px; max-width: 640px; width: calc(100vw - 40px);
+    max-height: calc(100vh - 40px); overflow-y: auto; text-align: center;
+  }
+  .card h1 { color: #ffb300; font-size: 34px; letter-spacing: 3px; }
+  .card h2 { color: #ffb300; font-size: 24px; letter-spacing: 2px; margin-bottom: 8px; }
+  .card .sub { color: #2ecc40; font-size: 13px; margin-bottom: 14px; }
+  .card p { font-size: 14px; line-height: 1.55; color: #ddd; margin-bottom: 10px; }
+  .btn {
+    display: inline-block; background: #ffb300; color: #1a1000; border: none;
+    font-size: 17px; font-weight: bold; letter-spacing: 1px; padding: 12px 30px;
+    border-radius: 6px; cursor: pointer; margin: 10px 4px 0;
+  }
+  .btn:hover { background: #ffc93b; }
+  .btn:disabled { background: #555; color: #999; cursor: default; }
+  .btn.ghost { background: transparent; border: 1px solid #557; color: #bbb; font-size: 13px; padding: 8px 18px; }
+  .btn.green { background: #2ecc40; color: #06130a; }
+  .fine { margin-top: 12px; font-size: 11px; color: #777; }
+  #bankline { font-size: 14px; margin: 10px 0; line-height: 1.8; }
+  #bankline b { color: #ffd700; }
+  #best { font-size: 12px; color: #999; margin-top: 8px; }
+  #best b { color: #ffb300; }
+  #levelup { display: none; }
+  #levelup .card { border-color: #2ecc40; }
+  #cards { display: flex; gap: 10px; margin-top: 12px; }
+  .upcard {
+    flex: 1; background: #0c1226; border: 2px solid #2ecc40; border-radius: 8px;
+    padding: 14px 10px; cursor: pointer; font-size: 13px; line-height: 1.45;
+  }
+  .upcard:hover { background: #14204a; }
+  .upcard b { display: block; font-size: 14px; margin-bottom: 6px; }
+  .upcard .key { display: inline-block; margin-top: 8px; background: #2a332a; border: 1px solid #555; border-radius: 4px; padding: 1px 8px; font-size: 12px; }
+  .upcard .new { color: #ffb300; font-weight: bold; }
+  .upcard.r0 { border-color: #2ecc40; } .upcard.r0 b { color: #2ecc40; }
+  .upcard.r1 { border-color: #4da3ff; } .upcard.r1 b { color: #4da3ff; }
+  .upcard.r2 { border-color: #ffb300; box-shadow: 0 0 14px rgba(255,179,0,0.35); } .upcard.r2 b { color: #ffb300; }
+  #gameover { display: none; }
+  #gameover .card { border-color: #e63946; }
+  #gameover h2 { color: #ff5b5b; }
+  #gostats, #vstats { font-size: 15px; line-height: 1.8; margin: 10px 0; }
+  #gostats b, #vstats b { color: #ffd700; }
+  #gobuild, #pausebuild { font-size: 12px; line-height: 1.7; color: #bbb; margin: 8px 0; }
+  #gobuild b, #pausebuild b { color: #ffb300; }
+  #victory { display: none; }
+  #victory .card { border-color: #ffd700; box-shadow: 0 0 30px rgba(255,215,0,0.3); }
+  #victory h2 { color: #ffd700; font-size: 30px; }
+  #pause { display: none; }
+  #pause .card { border-color: #4da3ff; max-width: 420px; }
+  #pause h2 { color: #4da3ff; }
+  #treeov { display: none; }
+  #treeov .card { max-width: 1560px; border-color: #ffd700; }
+  #treewrap { display: flex; gap: 14px; align-items: stretch; }
+  #treecv { width: 100%; max-width: 1180px; height: auto; background: #070b18; border: 1px solid #334; border-radius: 6px; cursor: pointer; flex: 1 1 auto; }
+  #treepanel { width: 250px; flex: 0 0 250px; text-align: left; font-size: 13px; line-height: 1.6; }
+  #tpoints { font-size: 14px; margin-bottom: 10px; }
+  #tpoints b { color: #ffd700; }
+  #tinfo { background: #0c1226; border: 1px solid #334; border-radius: 6px; padding: 10px; min-height: 150px; margin-bottom: 10px; }
+  #treepanel .btn { font-size: 13px; padding: 8px 14px; margin: 4px 4px 0 0; }
+  #wtov { display: none; }
+  #wtov .card { max-width: 1240px; border-color: #4da3ff; }
+  #wtwrap { display: flex; gap: 14px; align-items: stretch; }
+  #wtreecv { width: 100%; max-width: 900px; height: auto; background: #070b18; border: 1px solid #334; border-radius: 6px; cursor: pointer; flex: 1 1 auto; }
+  #wtpanel { width: 250px; flex: 0 0 250px; text-align: left; font-size: 13px; line-height: 1.6; }
+  #wtpoints { font-size: 14px; margin-bottom: 10px; }
+  #wtpoints b { color: #ffd700; }
+  #wtinfo { background: #0c1226; border: 1px solid #334; border-radius: 6px; padding: 10px; min-height: 150px; margin-bottom: 10px; }
+  #wtpanel .btn { font-size: 13px; padding: 8px 14px; margin: 4px 4px 0 0; }
+  .pickrow { margin-top: 10px; font-size: 12px; color: #999; }
+  .pickrow .lbl { display: block; margin-bottom: 5px; letter-spacing: 2px; }
+  .pick { background: #0c1226; border: 1px solid #557; color: #bbb; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin: 2px; }
+  .pick:hover { border-color: #ffb300; color: #fff; }
+  .pick.on { border-color: #ffb300; color: #ffb300; font-weight: bold; }
+  .pick.lock { opacity: 0.45; cursor: default; }
+  .controls { font-size: 12px; color: #999; margin-top: 10px; line-height: 1.7; }
+  .controls b { color: #fff; background: #2a332a; border: 1px solid #555; border-radius: 4px; padding: 1px 7px; margin: 0 2px; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div id="xpbar"><div id="xpfill"></div></div>
+  <div id="bossbar"><div id="bossfill"></div><div id="bossname">CHEFE</div></div>
+  <div id="hudrow">
+    <div class="chip">
+      <div>Nv <b id="level">1</b> · <span id="timer">0:00</span></div>
+      <div id="hpwrap"><div id="hpfill"></div><div id="hptext"></div></div>
+      <div id="stage">F1 Vale Verde</div>
+    </div>
+    <div class="chip" id="stats">
+      <div>ABATES <b id="kills">0</b> · <span id="coins">0 ◉</span></div>
+      <div>AMEAÇA <b id="threat">1</b></div>
+    </div>
+  </div>
+</div>
+<div id="build" class="chip" style="display:none"></div>
+<div id="banner"></div>
+<div id="toast"></div>
+<canvas id="minimap" width="132" height="132" style="display:none"></canvas>
+<div id="chips" style="display:none"></div>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <h1>METEORO</h1>
+    <div class="sub">survivors incremental · 10 fases · 10 armas · 6 magos · 8 artefatos</div>
+    <p>Sobreviva a cada fase, mate o chefe e entre no portal. Chefes dão <b>pontos de árvore</b>, fases limpas dão <b>+2</b> — gaste na árvore passiva, porque a fase 10 não perdoa.</p>
+    <div id="bankline"></div>
+    <div class="pickrow"><span class="lbl">MAGO</span><div id="magerow"></div></div>
+    <div class="pickrow"><span class="lbl">ARTEFATO</span><div id="artrow"></div></div>
+    <div id="best"></div>
+    <button id="btn-start" class="btn">COMEÇAR A CHUVA</button>
+    <button id="btn-tree" class="btn green">ÁRVORE DE HABILIDADES</button>
+    <button id="btn-sound" class="btn ghost">SOM: ON</button>
+    <div class="controls"><b>WASD</b>/<b>setas</b> mover · <b>Espaço</b> dash · <b>P</b> pausa · <b>M</b> som</div>
+    <div class="fine">moedas, pontos e recordes salvos neste navegador</div>
+  </div>
+</div>
+
+<div id="treeov" class="overlay">
+  <div class="card">
+    <h2>ÁRVORE PASSIVA</h2>
+    <div class="sub">100 nodos + 16 notables + 10 portais de arma · bônus valem para toda run</div>
+    <div id="treewrap">
+      <canvas id="treecv" width="1700" height="1050"></canvas>
+      <div id="treepanel">
+        <div id="tpoints"></div>
+        <div id="tinfo"></div>
+        <button id="tbuy" class="btn green">COMPRAR</button>
+        <button id="topen" class="btn" style="display:none">ABRIR ÁRVORE</button>
+        <button id="tbpoint" class="btn ghost">COMPRAR PONTO</button>
+        <button id="trespec" class="btn ghost">RESETAR</button>
+        <button id="tclose" class="btn ghost">VOLTAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="wtov" class="overlay">
+  <div class="card">
+    <h2 id="wttitle">ÁRVORE DE ARMA</h2>
+    <div class="sub">12 nodos + evolução · pontos de arma vêm de chefes e fases</div>
+    <div id="wtwrap">
+      <canvas id="wtreecv" width="900" height="660"></canvas>
+      <div id="wtpanel">
+        <div id="wtpoints"></div>
+        <div id="wtinfo"></div>
+        <button id="wtbuy" class="btn green">COMPRAR</button>
+        <button id="wtrespec" class="btn ghost">RESETAR</button>
+        <button id="wtclose" class="btn ghost">VOLTAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="levelup" class="overlay">
+  <div class="card">
+    <h2>NÍVEL <span id="lunum">2</span>!</h2>
+    <div class="sub">escolha uma melhoria</div>
+    <div id="cards"></div>
+  </div>
+</div>
+
+<div id="gameover" class="overlay">
+  <div class="card">
+    <h2 id="gotitle">VIROU POEIRA ESTELAR</h2>
+    <div id="gostats"></div>
+    <div id="gobuild"></div>
+    <button id="btn-again" class="btn">DE NOVO</button>
+    <button id="btn-shop" class="btn" style="background:#2ecc40">LOJA</button>
+  </div>
+</div>
+
+<div id="victory" class="overlay">
+  <div class="card">
+    <h2>O METEORO CAIU!</h2>
+    <div class="sub">você zerou as 10 fases</div>
+    <div id="vstats"></div>
+    <button id="btn-endless" class="btn">CONTINUAR NO INFINITO</button>
+    <button id="btn-vshop" class="btn" style="background:#2ecc40">LOJA</button>
+  </div>
+</div>
+
+<div id="pause" class="overlay">
+  <div class="card">
+    <h2>PAUSADO</h2>
+    <p>respira. eles esperam.</p>
+    <div id="pausebuild"></div>
+    <button id="btn-resume" class="btn">VOLTAR</button>
+    <button id="btn-quit" class="btn" style="background:#555">DESISTIR</button>
+  </div>
+</div>
+
+<script src="data-tree.js"></script>
+<script src="data-stages.js"></script>
+<script src="data-wtree.js"></script>
+<script src="data-meta.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
