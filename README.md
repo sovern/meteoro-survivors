@@ -127,7 +127,15 @@ data-wtree.js    10 mini-árvores de arma + evoluções
 data-stages.js   10 fases, temas, chefes e padrões
 data-meta.js     magos, artefatos e marcos
 icons/           sprite sheets (weapons 5x2, tree-stats 6x2)
+ml/              laboratório de bots: GA, neuroevolução, backprop (ver ml/README.md)
 ```
+
+## Bots que aprendem
+
+O jogo vem com um bot jogável (`index.html#bot`, 1000 sessões, timescale até x64)
+e um laboratório de ML em `ml/`: algoritmo genético sobre 31 parâmetros do bot,
+neuroevolução de uma rede 12-8-3 e clonagem comportamental com backprop em Python
+puro. Placar atual: GA chega na **F5**, rede evoluída atravessa o portal da F1.
 
 ## Dev: testes
 
