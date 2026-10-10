@@ -1,9 +1,9 @@
 {
- "digest": "16d873be32855706",
+ "digest": "5b3441f338f9022e",
  "files": [
   {
    "file": "game.js",
-   "lines": 3848,
+   "lines": 3856,
    "sections": [
     {
      "name": "config",
@@ -98,7 +98,7 @@
     {
      "name": "boot",
      "line": 3558,
-     "end": 3848
+     "end": 3856
     }
    ],
    "functions": [
@@ -1426,23 +1426,23 @@
      "name": "init",
      "args": "startLoop",
      "line": 3622,
-     "end": 3797,
+     "end": 3805,
      "depth": 1,
      "section": "boot"
     },
     {
      "name": "on",
      "args": "id, fn",
-     "line": 3753,
-     "end": 3756,
+     "line": 3761,
+     "end": 3764,
      "depth": 2,
      "section": "boot"
     },
     {
      "name": "onEl",
      "args": "node, fn",
-     "line": 3757,
-     "end": 3759,
+     "line": 3765,
+     "end": 3767,
      "depth": 2,
      "section": "boot"
     }

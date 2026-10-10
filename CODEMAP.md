@@ -1,6 +1,6 @@
 # CODEMAP — METEORO
 
-> Gerado por `python3 tools/codeindex.py` — **não edite à mão**. Digest `16d873be32855706`. Rode `python3 tools/codeindex.py check` para saber se está atualizado.
+> Gerado por `python3 tools/codeindex.py` — **não edite à mão**. Digest `5b3441f338f9022e`. Rode `python3 tools/codeindex.py check` para saber se está atualizado.
 
 **Como usar (agentes):** ache o símbolo aqui → leia só o intervalo de linhas (`python3 tools/codeindex.py show <função>`), em vez de abrir o `game.js` inteiro.
 
@@ -8,7 +8,7 @@
 
 | Arquivo | Linhas | Funções | Papel |
 |---|---:|---:|---|
-| `game.js` | 3848 | 168 | motor inteiro (IIFE `window.__game`): estado, spawn, combate, render, UI, bot, selftest |
+| `game.js` | 3856 | 168 | motor inteiro (IIFE `window.__game`): estado, spawn, combate, render, UI, bot, selftest |
 | `data-stages.js` | 124 | 0 | `window.StageData` — 10 fases: tema visual, elenco de inimigos, chefe com padrões, escalada. |
 | `data-tree.js` | 230 | 9 | `window.TreeData` — Árvore passiva: 100 normais + 16 notables + 10 gateways de arma, 13 setores. |
 | `data-wtree.js` | 146 | 5 | `window.WTreeData` — Mini-árvores por arma: 13 nodos cada (raiz + 4 + 4 + 3 + evolução). |
@@ -104,9 +104,9 @@ consts: `BOT` L3103 · `BOT_MAX_SESSIONS` L3105 · `BOT_PRIO` L3106
 
 consts: `SELFTEST` L3323 · `SHOT` L3324
 
-### boot  ·  L3558–3848
+### boot  ·  L3558–3856
 
-`resize` L3559–3569 · `buildChips` L3570–3605 · `frame` L3607–3621 · `init` L3622–3797
+`resize` L3559–3569 · `buildChips` L3570–3605 · `frame` L3607–3621 · `init` L3622–3805
 
 ## API pública (`window.__game`)
 

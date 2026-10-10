@@ -68,7 +68,7 @@ window.__game = (function () {
         if (m && m.tree) {
           if (typeof m.tree.points === 'number') meta.tree.points = m.tree.points;
           if (typeof m.tree.bought === 'number') meta.tree.bought = m.tree.bought;
-          if (Array.isArray(m.tree.owned)) meta.tree.owned = m.tree.owned.filter(function (id) { return window.TreeData.byId(id); });
+          if (Array.isArray(m.tree.owned)) meta.tree.owned = m.tree.owned.filter(function (id, ix, a) { return a.indexOf(id) === ix && window.TreeData.byId(id); });
           if (meta.tree.owned.indexOf('start') < 0) meta.tree.owned.push('start');
         }
         if (m && m.wtree) {
@@ -77,7 +77,7 @@ window.__game = (function () {
             var WO = {};
             for (var wk in m.wtree.owned) {
               if (!window.WTreeData || !window.WTreeData.trees[wk] || !Array.isArray(m.wtree.owned[wk])) continue;
-              WO[wk] = m.wtree.owned[wk].filter(function (id) { return window.WTreeData.byId(wk, id); });
+              WO[wk] = m.wtree.owned[wk].filter(function (id, ix, a) { return a.indexOf(id) === ix && window.WTreeData.byId(wk, id); });
             }
             meta.wtree.owned = WO;
           }
@@ -3690,6 +3690,14 @@ window.__game = (function () {
     if (el.sound) el.sound.textContent = 'SOM: ON';
     if (typeof window.addEventListener === 'function') {
       window.addEventListener('resize', resize);
+      // outra aba salvou: recarrega o save, senão esta aba compra de novo o que a outra já comprou
+      window.addEventListener('storage', function (e) {
+        if (e.key !== META_KEY) return;
+        metaLoad();
+        renderBank();
+        if (treeOpen) { renderTreePanel(); renderTree(); }
+        if (wtOpen) { renderWTreePanel(); renderWTree(); }
+      });
       window.addEventListener('keydown', function (e) {
         var c = e.code || '';
         if (c === 'Space' || c.indexOf('Arrow') === 0) { try { e.preventDefault(); } catch (x) { /* noop */ } }
