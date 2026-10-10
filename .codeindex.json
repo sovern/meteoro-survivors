@@ -1,0 +1,2230 @@
+{
+ "digest": "16d873be32855706",
+ "files": [
+  {
+   "file": "game.js",
+   "lines": 3848,
+   "sections": [
+    {
+     "name": "config",
+     "line": 26,
+     "end": 50
+    },
+    {
+     "name": "meta v2 (migra v1)",
+     "line": 51,
+     "end": 106
+    },
+    {
+     "name": "state",
+     "line": 107,
+     "end": 132
+    },
+    {
+     "name": "meta: bônus agregados (árvore + armas + mago + artefato)",
+     "line": 133,
+     "end": 332
+    },
+    {
+     "name": "audio",
+     "line": 333,
+     "end": 407
+    },
+    {
+     "name": "helpers",
+     "line": 408,
+     "end": 447
+    },
+    {
+     "name": "spawn",
+     "line": 448,
+     "end": 544
+    },
+    {
+     "name": "combat",
+     "line": 545,
+     "end": 904
+    },
+    {
+     "name": "upgrades (run)",
+     "line": 905,
+     "end": 1065
+    },
+    {
+     "name": "update",
+     "line": 1066,
+     "end": 1580
+    },
+    {
+     "name": "flow",
+     "line": 1581,
+     "end": 1730
+    },
+    {
+     "name": "HUD / menus",
+     "line": 1731,
+     "end": 1895
+    },
+    {
+     "name": "render",
+     "line": 1896,
+     "end": 1896
+    },
+    {
+     "name": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)",
+     "line": 1897,
+     "end": 2671
+    },
+    {
+     "name": "árvore (UI)",
+     "line": 2672,
+     "end": 2983
+    },
+    {
+     "name": "mini-árvore de arma (UI)",
+     "line": 2984,
+     "end": 3101
+    },
+    {
+     "name": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho",
+     "line": 3102,
+     "end": 3321
+    },
+    {
+     "name": "selftest (#selftest): página real, entradas reais, 1 passada",
+     "line": 3322,
+     "end": 3557
+    },
+    {
+     "name": "boot",
+     "line": 3558,
+     "end": 3848
+    }
+   ],
+   "functions": [
+    {
+     "name": "clamp",
+     "args": "v, a, b",
+     "line": 5,
+     "end": 5,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "lerp",
+     "args": "a, b, t",
+     "line": 6,
+     "end": 6,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "d2",
+     "args": "ax, ay, bx, by",
+     "line": 7,
+     "end": 7,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "mulberry32",
+     "args": "seed",
+     "line": 8,
+     "end": 17,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "rr",
+     "args": "",
+     "line": 20,
+     "end": 20,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "fmtTime",
+     "args": "s",
+     "line": 21,
+     "end": 24,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "stageDef",
+     "args": "",
+     "line": 45,
+     "end": 48,
+     "depth": 1,
+     "section": "config"
+    },
+    {
+     "name": "endlessLoops",
+     "args": "",
+     "line": 49,
+     "end": 49,
+     "depth": 1,
+     "section": "config"
+    },
+    {
+     "name": "metaLoad",
+     "args": "",
+     "line": 60,
+     "end": 99,
+     "depth": 1,
+     "section": "meta v2 (migra v1)"
+    },
+    {
+     "name": "metaSave",
+     "args": "",
+     "line": 100,
+     "end": 105,
+     "depth": 1,
+     "section": "meta v2 (migra v1)"
+    },
+    {
+     "name": "gateOpen",
+     "args": "w",
+     "line": 135,
+     "end": 135,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "wtreeOwnedList",
+     "args": "w",
+     "line": 136,
+     "end": 139,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "wtreeHas",
+     "args": "w, id",
+     "line": 140,
+     "end": 140,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "wtreeSpent",
+     "args": "w",
+     "line": 141,
+     "end": 141,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "wtreeAvail",
+     "args": "w, id",
+     "line": 142,
+     "end": 151,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "wtreeBuy",
+     "args": "w, id",
+     "line": 152,
+     "end": 161,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "wtreeRespec",
+     "args": "w",
+     "line": 162,
+     "end": 171,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "applyModsInto",
+     "args": "b, mods",
+     "line": 172,
+     "end": 174,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "treeBonuses",
+     "args": "",
+     "line": 175,
+     "end": 200,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "evoOwned",
+     "args": "w",
+     "line": 201,
+     "end": 201,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "applyEvo",
+     "args": "w",
+     "line": 202,
+     "end": 215,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "checkMiles",
+     "args": "",
+     "line": 216,
+     "end": 230,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "treeSpent",
+     "args": "",
+     "line": 231,
+     "end": 231,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "treeBuy",
+     "args": "id",
+     "line": 232,
+     "end": 245,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "treeRespec",
+     "args": "",
+     "line": 246,
+     "end": 250,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "pointCost",
+     "args": "",
+     "line": 251,
+     "end": 251,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "buyPoint",
+     "args": "",
+     "line": 252,
+     "end": 260,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "newPlayer",
+     "args": "tb",
+     "line": 262,
+     "end": 273,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "resetRun",
+     "args": "",
+     "line": 274,
+     "end": 314,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "dmgMul",
+     "args": "",
+     "line": 315,
+     "end": 315,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "emul",
+     "args": "e",
+     "line": 316,
+     "end": 316,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "applyTheme",
+     "args": "",
+     "line": 318,
+     "end": 331,
+     "depth": 1,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "audio",
+     "args": "",
+     "line": 335,
+     "end": 349,
+     "depth": 1,
+     "section": "audio"
+    },
+    {
+     "name": "beep",
+     "args": "f0, f1, dur, type, delay, vol",
+     "line": 350,
+     "end": 363,
+     "depth": 1,
+     "section": "audio"
+    },
+    {
+     "name": "noise",
+     "args": "dur, freq, type, vol, delay",
+     "line": 364,
+     "end": 380,
+     "depth": 1,
+     "section": "audio"
+    },
+    {
+     "name": "toggleMute",
+     "args": "",
+     "line": 401,
+     "end": 406,
+     "depth": 1,
+     "section": "audio"
+    },
+    {
+     "name": "toast",
+     "args": "msg",
+     "line": 409,
+     "end": 414,
+     "depth": 1,
+     "section": "helpers"
+    },
+    {
+     "name": "banner",
+     "args": "txt",
+     "line": 415,
+     "end": 420,
+     "depth": 1,
+     "section": "helpers"
+    },
+    {
+     "name": "addShake",
+     "args": "n",
+     "line": 421,
+     "end": 421,
+     "depth": 1,
+     "section": "helpers"
+    },
+    {
+     "name": "floater",
+     "args": "x, y, txt, color, size",
+     "line": 422,
+     "end": 425,
+     "depth": 1,
+     "section": "helpers"
+    },
+    {
+     "name": "burst",
+     "args": "x, y, n, color, spd, life, r",
+     "line": 426,
+     "end": 435,
+     "depth": 1,
+     "section": "helpers"
+    },
+    {
+     "name": "nearestEnemy",
+     "args": "x, y, maxD, skip",
+     "line": 436,
+     "end": 446,
+     "depth": 1,
+     "section": "helpers"
+    },
+    {
+     "name": "threat",
+     "args": "",
+     "line": 449,
+     "end": 449,
+     "depth": 1,
+     "section": "spawn"
+    },
+    {
+     "name": "pickType",
+     "args": "",
+     "line": 450,
+     "end": 459,
+     "depth": 1,
+     "section": "spawn"
+    },
+    {
+     "name": "spawnEnemy",
+     "args": "forceType, atX, atY",
+     "line": 460,
+     "end": 491,
+     "depth": 1,
+     "section": "spawn"
+    },
+    {
+     "name": "spawnBoss",
+     "args": "",
+     "line": 492,
+     "end": 519,
+     "depth": 1,
+     "section": "spawn"
+    },
+    {
+     "name": "updateSpawns",
+     "args": "dt",
+     "line": 520,
+     "end": 543,
+     "depth": 1,
+     "section": "spawn"
+    },
+    {
+     "name": "damageEnemy",
+     "args": "e, dmg, kx, ky, crit",
+     "line": 546,
+     "end": 555,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "killEnemy",
+     "args": "e",
+     "line": 556,
+     "end": 586,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "bossDown",
+     "args": "e",
+     "line": 587,
+     "end": 607,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "dropGems",
+     "args": "e",
+     "line": 608,
+     "end": 618,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "fireBolt",
+     "args": "",
+     "line": 619,
+     "end": 638,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "meteorTarget",
+     "args": "",
+     "line": 639,
+     "end": 651,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "callMeteor",
+     "args": "",
+     "line": 652,
+     "end": 664,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "explodeMeteor",
+     "args": "s",
+     "line": 665,
+     "end": 687,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "fireChain",
+     "args": "",
+     "line": 688,
+     "end": 708,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "fireNova",
+     "args": "",
+     "line": 709,
+     "end": 728,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "fireRailOne",
+     "args": "ang",
+     "line": 729,
+     "end": 746,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "fireRail",
+     "args": "",
+     "line": 747,
+     "end": 760,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "fireMiss",
+     "args": "",
+     "line": 761,
+     "end": 779,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "explodeMiss",
+     "args": "s",
+     "line": 780,
+     "end": 792,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "frostTick",
+     "args": "",
+     "line": 793,
+     "end": 811,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "layMine",
+     "args": "",
+     "line": 812,
+     "end": 836,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "explodeMine",
+     "args": "m",
+     "line": 837,
+     "end": 856,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "updateMines",
+     "args": "dt",
+     "line": 857,
+     "end": 876,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "updateRang",
+     "args": "",
+     "line": 877,
+     "end": 897,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "spitGlob",
+     "args": "e, ang, spd",
+     "line": 898,
+     "end": 904,
+     "depth": 1,
+     "section": "combat"
+    },
+    {
+     "name": "shuffleUnlocks",
+     "args": "",
+     "line": 963,
+     "end": 971,
+     "depth": 1,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "rollChoices",
+     "args": "",
+     "line": 972,
+     "end": 1018,
+     "depth": 1,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "isUnlockCard",
+     "args": "u",
+     "line": 1019,
+     "end": 1019,
+     "depth": 1,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "weaponsUnlocked",
+     "args": "",
+     "line": 1020,
+     "end": 1024,
+     "depth": 1,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "chooseUpgrade",
+     "args": "i",
+     "line": 1025,
+     "end": 1037,
+     "depth": 1,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "openLevelUp",
+     "args": "",
+     "line": 1038,
+     "end": 1045,
+     "depth": 1,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "closeLevelUp",
+     "args": "",
+     "line": 1046,
+     "end": 1048,
+     "depth": 1,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "renderCards",
+     "args": "",
+     "line": 1049,
+     "end": 1064,
+     "depth": 1,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "updatePlayer",
+     "args": "dt",
+     "line": 1067,
+     "end": 1101,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "tryDash",
+     "args": "",
+     "line": 1102,
+     "end": 1117,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "hurtPlayer",
+     "args": "dmg, kx, ky, from",
+     "line": 1118,
+     "end": 1161,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "updateWeapons",
+     "args": "dt",
+     "line": 1162,
+     "end": 1205,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "updateShots",
+     "args": "dt",
+     "line": 1206,
+     "end": 1253,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "bossPattern",
+     "args": "e, dt",
+     "line": 1254,
+     "end": 1294,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "updateEnemies",
+     "args": "dt",
+     "line": 1295,
+     "end": 1418,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "updateOrbs",
+     "args": "",
+     "line": 1419,
+     "end": 1439,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "updateStrikes",
+     "args": "dt",
+     "line": 1440,
+     "end": 1451,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "updateGems",
+     "args": "dt",
+     "line": 1452,
+     "end": 1487,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "updatePortal",
+     "args": "dt",
+     "line": 1488,
+     "end": 1500,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "updateFx",
+     "args": "dt",
+     "line": 1501,
+     "end": 1551,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "update",
+     "args": "dt",
+     "line": 1553,
+     "end": 1579,
+     "depth": 1,
+     "section": "update"
+    },
+    {
+     "name": "bankCoins",
+     "args": "",
+     "line": 1582,
+     "end": 1596,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "favWeapon",
+     "args": "",
+     "line": 1597,
+     "end": 1604,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "gameOver",
+     "args": "",
+     "line": 1605,
+     "end": 1620,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "victory",
+     "args": "",
+     "line": 1621,
+     "end": 1634,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "hideRunUI",
+     "args": "",
+     "line": 1635,
+     "end": 1641,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "showRunUI",
+     "args": "",
+     "line": 1642,
+     "end": 1647,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "startRun",
+     "args": "",
+     "line": 1648,
+     "end": 1668,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "nextStage",
+     "args": "",
+     "line": 1669,
+     "end": 1697,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "continueEndless",
+     "args": "",
+     "line": 1698,
+     "end": 1705,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "toShop",
+     "args": "",
+     "line": 1706,
+     "end": 1718,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "quitToShop",
+     "args": "",
+     "line": 1719,
+     "end": 1723,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "togglePause",
+     "args": "",
+     "line": 1724,
+     "end": 1729,
+     "depth": 1,
+     "section": "flow"
+    },
+    {
+     "name": "weaponOwned",
+     "args": "w",
+     "line": 1732,
+     "end": 1737,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "weaponLv",
+     "args": "w",
+     "line": 1738,
+     "end": 1742,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "buildHTML",
+     "args": "",
+     "line": 1743,
+     "end": 1750,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "refreshBuild",
+     "args": "",
+     "line": 1751,
+     "end": 1763,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "updateHUD",
+     "args": "",
+     "line": 1764,
+     "end": 1802,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "renderMinimap",
+     "args": "",
+     "line": 1803,
+     "end": 1839,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "renderBank",
+     "args": "",
+     "line": 1840,
+     "end": 1849,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "buildMageRow",
+     "args": "",
+     "line": 1850,
+     "end": 1866,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "buildArtRow",
+     "args": "",
+     "line": 1867,
+     "end": 1894,
+     "depth": 1,
+     "section": "HUD / menus"
+    },
+    {
+     "name": "hexA",
+     "args": "hex, a",
+     "line": 1899,
+     "end": 1905,
+     "depth": 1,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "drawEyes",
+     "args": "g, x, y, r, dx, dy, angry",
+     "line": 1906,
+     "end": 1925,
+     "depth": 1,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "drawCrown",
+     "args": "g, x, y, r",
+     "line": 1926,
+     "end": 1938,
+     "depth": 1,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "drawSlimeBody",
+     "args": "g, e, base",
+     "line": 1939,
+     "end": 1946,
+     "depth": 1,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "drawEnemy",
+     "args": "g, e",
+     "line": 1947,
+     "end": 2208,
+     "depth": 1,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "drawPlayer",
+     "args": "g",
+     "line": 2209,
+     "end": 2305,
+     "depth": 1,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "drawProp",
+     "args": "g, pr",
+     "line": 2306,
+     "end": 2407,
+     "depth": 1,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "render",
+     "args": "",
+     "line": 2409,
+     "end": 2670,
+     "depth": 1,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "nodeIcon",
+     "args": "n",
+     "line": 2682,
+     "end": 2695,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "drawGlyph",
+     "args": "g, ch, x, y, size, color",
+     "line": 2696,
+     "end": 2703,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "nodeWeapon",
+     "args": "n",
+     "line": 2709,
+     "end": 2720,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "nodeStat",
+     "args": "n",
+     "line": 2726,
+     "end": 2737,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "sheetFor",
+     "args": "name",
+     "line": 2739,
+     "end": 2752,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "spriteFor",
+     "args": "name",
+     "line": 2754,
+     "end": 2763,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "groundPattern",
+     "args": "g",
+     "line": 2765,
+     "end": 2771,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "drawEnemySprite",
+     "args": "g, e, ex, ey, r, dx",
+     "line": 2781,
+     "end": 2809,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "drawSheetCell",
+     "args": "g, name, cols, rows, col, row, x, y, size",
+     "line": 2810,
+     "end": 2816,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "drawNodeImg",
+     "args": "g, n, x, y, size",
+     "line": 2817,
+     "end": 2827,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "treeIsOwned",
+     "args": "id",
+     "line": 2828,
+     "end": 2828,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "treeAvail",
+     "args": "id",
+     "line": 2829,
+     "end": 2837,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "openTree",
+     "args": "",
+     "line": 2838,
+     "end": 2846,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "closeTree",
+     "args": "",
+     "line": 2847,
+     "end": 2852,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "renderTreePanel",
+     "args": "",
+     "line": 2853,
+     "end": 2877,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "renderTree",
+     "args": "",
+     "line": 2878,
+     "end": 2941,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "drawDiamond",
+     "args": "g, x, y, r, fill, stroke, lw",
+     "line": 2942,
+     "end": 2954,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "treeEventPos",
+     "args": "ev",
+     "line": 2955,
+     "end": 2959,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "treeNodeAt",
+     "args": "x, y",
+     "line": 2960,
+     "end": 2967,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "treeBuySelected",
+     "args": "",
+     "line": 2968,
+     "end": 2977,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "treeOpenWTree",
+     "args": "",
+     "line": 2978,
+     "end": 2982,
+     "depth": 1,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "openWTree",
+     "args": "w",
+     "line": 2986,
+     "end": 2995,
+     "depth": 1,
+     "section": "mini-árvore de arma (UI)"
+    },
+    {
+     "name": "closeWTree",
+     "args": "",
+     "line": 2996,
+     "end": 3003,
+     "depth": 1,
+     "section": "mini-árvore de arma (UI)"
+    },
+    {
+     "name": "renderWTreePanel",
+     "args": "",
+     "line": 3004,
+     "end": 3025,
+     "depth": 1,
+     "section": "mini-árvore de arma (UI)"
+    },
+    {
+     "name": "renderWTree",
+     "args": "",
+     "line": 3026,
+     "end": 3078,
+     "depth": 1,
+     "section": "mini-árvore de arma (UI)"
+    },
+    {
+     "name": "wtreeEventPos",
+     "args": "ev",
+     "line": 3079,
+     "end": 3082,
+     "depth": 1,
+     "section": "mini-árvore de arma (UI)"
+    },
+    {
+     "name": "wtreeNodeAt",
+     "args": "x, y",
+     "line": 3083,
+     "end": 3090,
+     "depth": 1,
+     "section": "mini-árvore de arma (UI)"
+    },
+    {
+     "name": "wtreeBuySelected",
+     "args": "",
+     "line": 3091,
+     "end": 3100,
+     "depth": 1,
+     "section": "mini-árvore de arma (UI)"
+    },
+    {
+     "name": "botPrio",
+     "args": "id",
+     "line": 3112,
+     "end": 3112,
+     "depth": 1,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "botCat",
+     "args": "u",
+     "line": 3121,
+     "end": 3129,
+     "depth": 1,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "botTick",
+     "args": "",
+     "line": 3130,
+     "end": 3240,
+     "depth": 1,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "botNodeScore",
+     "args": "n",
+     "line": 3241,
+     "end": 3249,
+     "depth": 1,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "botSpend",
+     "args": "",
+     "line": 3250,
+     "end": 3290,
+     "depth": 1,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "botFrame",
+     "args": "dt",
+     "line": 3291,
+     "end": 3308,
+     "depth": 1,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "endBotSession",
+     "args": "",
+     "line": 3309,
+     "end": 3320,
+     "depth": 1,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "runShot",
+     "args": "",
+     "line": 3326,
+     "end": 3350,
+     "depth": 1,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "runSelftest",
+     "args": "",
+     "line": 3351,
+     "end": 3556,
+     "depth": 1,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "drain",
+     "args": "",
+     "line": 3358,
+     "end": 3364,
+     "depth": 2,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "step",
+     "args": "n, renderEvery",
+     "line": 3365,
+     "end": 3372,
+     "depth": 2,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "kd",
+     "args": "code",
+     "line": 3373,
+     "end": 3373,
+     "depth": 2,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "ku",
+     "args": "code",
+     "line": 3374,
+     "end": 3374,
+     "depth": 2,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "click",
+     "args": "id",
+     "line": 3375,
+     "end": 3375,
+     "depth": 2,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "done",
+     "args": "ok, msg",
+     "line": 3376,
+     "end": 3380,
+     "depth": 2,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "assert",
+     "args": "c, msg",
+     "line": 3381,
+     "end": 3381,
+     "depth": 2,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "cvClick",
+     "args": "nx, ny",
+     "line": 3389,
+     "end": 3394,
+     "depth": 3,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "resize",
+     "args": "",
+     "line": 3559,
+     "end": 3569,
+     "depth": 1,
+     "section": "boot"
+    },
+    {
+     "name": "buildChips",
+     "args": "",
+     "line": 3570,
+     "end": 3605,
+     "depth": 1,
+     "section": "boot"
+    },
+    {
+     "name": "frame",
+     "args": "t",
+     "line": 3607,
+     "end": 3621,
+     "depth": 1,
+     "section": "boot"
+    },
+    {
+     "name": "init",
+     "args": "startLoop",
+     "line": 3622,
+     "end": 3797,
+     "depth": 1,
+     "section": "boot"
+    },
+    {
+     "name": "on",
+     "args": "id, fn",
+     "line": 3753,
+     "end": 3756,
+     "depth": 2,
+     "section": "boot"
+    },
+    {
+     "name": "onEl",
+     "args": "node, fn",
+     "line": 3757,
+     "end": 3759,
+     "depth": 2,
+     "section": "boot"
+    }
+   ],
+   "consts": [
+    {
+     "name": "TAU",
+     "line": 4,
+     "section": null
+    },
+    {
+     "name": "WORLD",
+     "line": 27,
+     "section": "config"
+    },
+    {
+     "name": "ENEMIES",
+     "line": 28,
+     "section": "config"
+    },
+    {
+     "name": "MAXE",
+     "line": 43,
+     "section": "config"
+    },
+    {
+     "name": "META_KEY",
+     "line": 52,
+     "section": "meta v2 (migra v1)"
+    },
+    {
+     "name": "ALL_WEAPONS",
+     "line": 134,
+     "section": "meta: bônus agregados (árvore + armas + mago + artefato)"
+    },
+    {
+     "name": "AC",
+     "line": 334,
+     "section": "audio"
+    },
+    {
+     "name": "UPS",
+     "line": 906,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "RAR_W",
+     "line": 958,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "UNLOCK_IDS",
+     "line": 960,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "UNLOCK_MINS",
+     "line": 961,
+     "section": "upgrades (run)"
+    },
+    {
+     "name": "MAGNIFY",
+     "line": 1898,
+     "section": "art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos)"
+    },
+    {
+     "name": "WGLYPH",
+     "line": 2674,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "SGLYPH",
+     "line": 2675,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "NGLYPH",
+     "line": 2676,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "NWEP",
+     "line": 2704,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "WPOS",
+     "line": 2721,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "SPOS",
+     "line": 2722,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "SHEETS",
+     "line": 2738,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "SPRITES",
+     "line": 2753,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "GROUND_PATS",
+     "line": 2764,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "BOSS_SPRITE",
+     "line": 2772,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "SPR_SQUASH",
+     "line": 2778,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "SPR_FLAP",
+     "line": 2779,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "SPR_FLOAT",
+     "line": 2780,
+     "section": "árvore (UI)"
+    },
+    {
+     "name": "BOT",
+     "line": 3103,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "BOT_MAX_SESSIONS",
+     "line": 3105,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "BOT_PRIO",
+     "line": 3106,
+     "section": "bot jogável (#bot): foge, pega XP, dashea, progride sozinho"
+    },
+    {
+     "name": "SELFTEST",
+     "line": 3323,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    },
+    {
+     "name": "SHOT",
+     "line": 3324,
+     "section": "selftest (#selftest): página real, entradas reais, 1 passada"
+    }
+   ],
+   "hash_modes": [
+    "#bot",
+    "#selftest",
+    "#shot-tree",
+    "#shot-wtree"
+   ],
+   "storage_keys": [
+    "meteoro_meta_v1"
+   ],
+   "dom_ids": [
+    "artrow",
+    "bankline",
+    "banner",
+    "best",
+    "bossbar",
+    "bossfill",
+    "bossname",
+    "btn-sound",
+    "build",
+    "cards",
+    "chips",
+    "coins",
+    "game",
+    "gameover",
+    "gobuild",
+    "gostats",
+    "hpfill",
+    "hptext",
+    "hud",
+    "kills",
+    "level",
+    "levelup",
+    "lunum",
+    "magerow",
+    "minimap",
+    "pause",
+    "pausebuild",
+    "stage",
+    "start",
+    "tbpoint",
+    "tbuy",
+    "tclose",
+    "threat",
+    "timer",
+    "tinfo",
+    "toast",
+    "topen",
+    "tpoints",
+    "treecv",
+    "treeov",
+    "trespec",
+    "victory",
+    "vstats",
+    "wtbuy",
+    "wtclose",
+    "wtinfo",
+    "wtov",
+    "wtpoints",
+    "wtreecv",
+    "wtrespec",
+    "wttitle",
+    "xpfill"
+   ],
+   "state_fields": {
+    "time": 276,
+    "kills": 276,
+    "runCoins": 276,
+    "runBanked": 276,
+    "over": 277,
+    "won": 277,
+    "paused": 277,
+    "stage": 278,
+    "stageT": 278,
+    "endless": 278,
+    "bossSpawned": 279,
+    "stageWarned": 279,
+    "portal": 279,
+    "bossDown": 279,
+    "bossDownPos": 279,
+    "shake": 280,
+    "hurtFlash": 280,
+    "bannerT": 280,
+    "bolt": 285,
+    "meteor": 286,
+    "orb": 287,
+    "chain": 288,
+    "nova": 289,
+    "rail": 290,
+    "miss": 291,
+    "frost": 292,
+    "mine": 293,
+    "rang": 294,
+    "cloak": 299,
+    "crit": 300,
+    "magnet": 301,
+    "regen": 302,
+    "armor": 303,
+    "dodge": 304,
+    "allDmg": 305,
+    "thorns": 306,
+    "greed": 306,
+    "wis": 306,
+    "exec": 306,
+    "sw": 307,
+    "swUsed": 307,
+    "spawnT": 308,
+    "levelPending": 308,
+    "choices": 308,
+    "dashCdMax": 309,
+    "buildDirty": 309,
+    "boss": 310,
+    "bossNum": 310,
+    "prevThreat": 310,
+    "stats": 311,
+    "player": 312,
+    "theme": 320,
+    "props": 322,
+    "muted": 402,
+    "toastTimer": 413,
+    "sndPop": 585,
+    "sndShoot": 636,
+    "gemCombo": 1471,
+    "gemComboT": 1473,
+    "sndGem": 1474,
+    "started": 1655,
+    "shopOpen": 1656
+   }
+  },
+  {
+   "file": "data-stages.js",
+   "lines": 124,
+   "sections": [],
+   "functions": [],
+   "consts": [
+    {
+     "name": "STAGES",
+     "line": 7,
+     "section": null
+    }
+   ],
+   "hash_modes": [],
+   "storage_keys": [],
+   "dom_ids": [],
+   "state_fields": {}
+  },
+  {
+   "file": "data-tree.js",
+   "lines": 230,
+   "sections": [],
+   "functions": [
+    {
+     "name": "fmtMod",
+     "args": "k, v",
+     "line": 38,
+     "end": 43,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "descOf",
+     "args": "mods",
+     "line": 44,
+     "end": 48,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "sectorOf",
+     "args": "ang",
+     "line": 81,
+     "end": 84,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "angDiff",
+     "args": "a, b",
+     "line": 85,
+     "end": 88,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "mulberry32",
+     "args": "seed",
+     "line": 90,
+     "end": 99,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "build",
+     "args": "",
+     "line": 102,
+     "end": 209,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "link",
+     "args": "a, b",
+     "line": 104,
+     "end": 109,
+     "depth": 2,
+     "section": null
+    },
+    {
+     "name": "anchorFor",
+     "args": "sector",
+     "line": 164,
+     "end": 180,
+     "depth": 2,
+     "section": null
+    },
+    {
+     "name": "outerPos",
+     "args": "anchor",
+     "line": 181,
+     "end": 187,
+     "depth": 2,
+     "section": null
+    }
+   ],
+   "consts": [
+    {
+     "name": "TAU",
+     "line": 4,
+     "section": null
+    },
+    {
+     "name": "W",
+     "line": 5,
+     "section": null
+    },
+    {
+     "name": "SECTORS",
+     "line": 7,
+     "section": null
+    },
+    {
+     "name": "FRACT",
+     "line": 22,
+     "section": null
+    },
+    {
+     "name": "NAMES",
+     "line": 23,
+     "section": null
+    },
+    {
+     "name": "NOTABLES",
+     "line": 50,
+     "section": null
+    },
+    {
+     "name": "OUTER_NOTABLES",
+     "line": 64,
+     "section": null
+    },
+    {
+     "name": "WEAPONS",
+     "line": 70,
+     "section": null
+    },
+    {
+     "name": "WNAMES",
+     "line": 71,
+     "section": null
+    },
+    {
+     "name": "RINGS",
+     "line": 73,
+     "section": null
+    },
+    {
+     "name": "RY",
+     "line": 79,
+     "section": null
+    }
+   ],
+   "hash_modes": [],
+   "storage_keys": [],
+   "dom_ids": [],
+   "state_fields": {}
+  },
+  {
+   "file": "data-wtree.js",
+   "lines": 146,
+   "sections": [],
+   "functions": [
+    {
+     "name": "fmt",
+     "args": "k, v",
+     "line": 91,
+     "end": 94,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "buildOne",
+     "args": "w",
+     "line": 98,
+     "end": 132,
+     "depth": 1,
+     "section": null
+    },
+    {
+     "name": "add",
+     "args": "n",
+     "line": 101,
+     "end": 101,
+     "depth": 2,
+     "section": null
+    },
+    {
+     "name": "link",
+     "args": "a, b",
+     "line": 102,
+     "end": 105,
+     "depth": 2,
+     "section": null
+    },
+    {
+     "name": "mk",
+     "args": "id, x, y, tier, mod, val",
+     "line": 106,
+     "end": 110,
+     "depth": 2,
+     "section": null
+    }
+   ],
+   "consts": [
+    {
+     "name": "W",
+     "line": 5,
+     "section": null
+    },
+    {
+     "name": "DEFS",
+     "line": 6,
+     "section": null
+    },
+    {
+     "name": "FRACT",
+     "line": 78,
+     "section": null
+    },
+    {
+     "name": "NAMES",
+     "line": 79,
+     "section": null
+    },
+    {
+     "name": "TIERS",
+     "line": 95,
+     "section": null
+    },
+    {
+     "name": "ROMAN",
+     "line": 96,
+     "section": null
+    }
+   ],
+   "hash_modes": [],
+   "storage_keys": [],
+   "dom_ids": [],
+   "state_fields": {}
+  },
+  {
+   "file": "data-meta.js",
+   "lines": 34,
+   "sections": [],
+   "functions": [],
+   "consts": [
+    {
+     "name": "MAGES",
+     "line": 4,
+     "section": null
+    },
+    {
+     "name": "ARTIFACTS",
+     "line": 12,
+     "section": null
+    }
+   ],
+   "hash_modes": [],
+   "storage_keys": [],
+   "dom_ids": [],
+   "state_fields": {}
+  }
+ ],
+ "api": [
+  "bankCoins",
+  "boss",
+  "botConfig",
+  "botFrame",
+  "botSpend",
+  "botTick",
+  "buyPoint",
+  "checkMiles",
+  "chooseUpgrade",
+  "closeTree",
+  "closeWTree",
+  "continueEndless",
+  "debug",
+  "endBotSession",
+  "hurt",
+  "init",
+  "keys",
+  "meta",
+  "nextStage",
+  "openTree",
+  "openWTree",
+  "quitToShop",
+  "render",
+  "renderTree",
+  "renderWTree",
+  "seed",
+  "spawn",
+  "startRun",
+  "state",
+  "togglePause",
+  "treeBuy",
+  "treeRespec",
+  "tryDash",
+  "update",
+  "version",
+  "wtreeBuy",
+  "wtreeRespec"
+ ],
+ "data": [
+  {
+   "file": "data-stages.js",
+   "global": "StageData",
+   "doc": "10 fases: tema visual, elenco de inimigos, chefe com padrões, escalada.",
+   "sample_ids": [
+    "Vale Verde",
+    "REI GOSMA",
+    "Cavernas Cinzentas",
+    "RAINHA MORCEGO",
+    "Pântano Fétido",
+    "COGUMELO ANCIÃO",
+    "Deserto Uivante",
+    "IMPERATRIZ VESPA",
+    "Cemitério",
+    "SENHOR CAVEIRA",
+    "Vulcão",
+    "GOLEM DE OBSIDIANA"
+   ],
+   "id_count": 20
+  },
+  {
+   "file": "data-tree.js",
+   "global": "TreeData",
+   "doc": "Árvore passiva: 100 normais + 16 notables + 10 gateways de arma, 13 setores.",
+   "sample_ids": [
+    "bolt",
+    "Lâminas",
+    "meteor",
+    "Fogo",
+    "chain",
+    "Tempestade",
+    "nova",
+    "Arcano",
+    "rail",
+    "Feixe",
+    "orb",
+    "Órbita"
+   ],
+   "id_count": 45
+  },
+  {
+   "file": "data-wtree.js",
+   "global": "WTreeData",
+   "doc": "Mini-árvores por arma: 13 nodos cada (raiz + 4 + 4 + 3 + evolução).",
+   "sample_ids": [
+    "Tempestade de Lâminas",
+    "Chuva Ígnea",
+    "Julgamento Final",
+    "Big Bang",
+    "Canhão Orbital",
+    "Sistema Planetário",
+    "Tempestade de Mísseis",
+    "Era do Gelo",
+    "Terra Arrasada",
+    "Lâminas do Vendaval",
+    "Despertar"
+   ],
+   "id_count": 11
+  },
+  {
+   "file": "data-meta.js",
+   "global": "MetaData",
+   "doc": "Magos jogáveis + artefatos + marcos (desafios persistentes).",
+   "sample_ids": [
+    "mago",
+    "Mago",
+    "piro",
+    "Piromante",
+    "eng",
+    "Engenheiro",
+    "cac",
+    "Caçador",
+    "cav",
+    "Cavaleiro",
+    "lad",
+    "Ladino"
+   ],
+   "id_count": 28
+  }
+ ],
+ "html_ids": [
+  "artrow",
+  "bankline",
+  "banner",
+  "best",
+  "bossbar",
+  "bossfill",
+  "bossname",
+  "btn-again",
+  "btn-endless",
+  "btn-quit",
+  "btn-resume",
+  "btn-shop",
+  "btn-sound",
+  "btn-start",
+  "btn-tree",
+  "btn-vshop",
+  "build",
+  "cards",
+  "chips",
+  "coins",
+  "game",
+  "gameover",
+  "gobuild",
+  "gostats",
+  "gotitle",
+  "hpfill",
+  "hptext",
+  "hpwrap",
+  "hud",
+  "hudrow",
+  "kills",
+  "level",
+  "levelup",
+  "lunum",
+  "magerow",
+  "minimap",
+  "pause",
+  "pausebuild",
+  "stage",
+  "start",
+  "stats",
+  "tbpoint",
+  "tbuy",
+  "tclose",
+  "threat",
+  "timer",
+  "tinfo",
+  "toast",
+  "topen",
+  "tpoints",
+  "treecv",
+  "treeov",
+  "treepanel",
+  "treewrap",
+  "trespec",
+  "victory",
+  "vstats",
+  "wtbuy",
+  "wtclose",
+  "wtinfo",
+  "wtov",
+  "wtpanel",
+  "wtpoints",
+  "wtreecv",
+  "wtrespec",
+  "wttitle",
+  "wtwrap",
+  "xpbar",
+  "xpfill"
+ ],
+ "dom_ids_missing_in_html": [],
+ "sprites": [
+  "bat.png",
+  "boss_banshee.png",
+  "boss_bat.png",
+  "boss_devourer.png",
+  "boss_golem.png",
+  "boss_meteor.png",
+  "boss_shroom.png",
+  "boss_skull.png",
+  "boss_slime.png",
+  "boss_treant.png",
+  "boss_wasp.png",
+  "brute.png",
+  "cac.png",
+  "cav.png",
+  "eng.png",
+  "ghost.png",
+  "golem.png",
+  "ground_1.png",
+  "ground_10.png",
+  "ground_2.png",
+  "ground_3.png",
+  "ground_4.png",
+  "ground_5.png",
+  "ground_6.png",
+  "ground_7.png",
+  "ground_8.png",
+  "ground_9.png",
+  "imp.png",
+  "lad.png",
+  "mago.png",
+  "mama.png",
+  "phantom.png",
+  "piro.png",
+  "shroom.png",
+  "skull.png",
+  "slime.png",
+  "spitter.png",
+  "wasp.png",
+  "wisp.png"
+ ],
+ "icons": [
+  "tree-stats.png",
+  "weapons.png"
+ ]
+}

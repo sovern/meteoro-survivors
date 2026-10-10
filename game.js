@@ -16,6 +16,7 @@ window.__game = (function () {
     };
   }
   var rng = mulberry32(7);
+  var seedLocked = false; // debug.seed trava: run 100% reproduzível
   function rr() { return rng(); }
   function fmtTime(s) {
     s = Math.floor(s);
@@ -107,7 +108,7 @@ window.__game = (function () {
   var state = {
     started: false, over: false, won: false, paused: false, shopOpen: true,
     time: 0, kills: 0, runCoins: 0, runBanked: false,
-    stage: 1, stageT: 0, endless: false, bossSpawned: false, stageWarned: false,
+    stage: 1, stageT: 0, endless: false, bossSpawned: false, stageWarned: false, bossDown: false, bossDownPos: null,
     theme: null, props: [], portal: null,
     cam: { x: 0, y: 0 }, view: { w: 0, h: 0, dpr: 1 },
     shake: 0, hurtFlash: 0, toastTimer: 0, bannerT: 0,
@@ -275,7 +276,7 @@ window.__game = (function () {
     state.time = 0; state.kills = 0; state.runCoins = 0; state.runBanked = false;
     state.over = false; state.won = false; state.paused = false;
     state.stage = 1; state.stageT = 0; state.endless = false;
-    state.bossSpawned = false; state.stageWarned = false; state.portal = null;
+    state.bossSpawned = false; state.stageWarned = false; state.portal = null; state.bossDown = false; state.bossDownPos = null;
     state.shake = 0; state.hurtFlash = 0; state.bannerT = 0;
     state.enemies.length = 0; state.shots.length = 0; state.eshots.length = 0;
     state.gems.length = 0; state.parts.length = 0; state.floats.length = 0;
@@ -296,14 +297,6 @@ window.__game = (function () {
     for (wi = 0; wi < ALL_WEAPONS.length; wi++) applyEvo(ALL_WEAPONS[wi]);
     var mage = window.MetaData ? window.MetaData.mageById(meta.mage) : null;
     state.cloak = (mage && mage.cloak) || '#1d4e89';
-    if (mage && mage.startWeapon && state[mage.startWeapon]) {
-      state[mage.startWeapon].unlocked = true;
-      if (mage.startWeapon === 'orb' && state.orb.count < 1) state.orb.count = 1;
-    }
-    if (meta.art && meta.artUnlocked[meta.art] && window.MetaData) {
-      var art = window.MetaData.artById(meta.art);
-      if (art && art.startWeapon && state[art.startWeapon]) state[art.startWeapon].unlocked = true;
-    }
     state.crit = 0.03 + tb.critC;
     state.magnet = 90 + tb.magnet;
     state.regen = tb.regen;
@@ -526,6 +519,7 @@ window.__game = (function () {
   }
   function updateSpawns(dt) {
     var S = stageDef();
+    if (state.bossDown) return;
     if (!state.stageWarned && S.time - state.stageT < 6 && !state.bossSpawned) {
       state.stageWarned = true;
       banner(S.boss.name + ' SE APROXIMA…');
@@ -601,20 +595,15 @@ window.__game = (function () {
     meta.stats.bosses++;
     metaSave();
     checkMiles();
-    var bi;
-    for (bi = state.enemies.length - 1; bi >= 0; bi--) {
-      var be = state.enemies[bi];
-      if (be === e || be.boss || be.elite || be.spawnT > 0) continue;
-      killEnemy(be);
-    }
     banner(e.bname + ' ABATIDO! +1 PONTO');
     sfx.level();
     if (state.stage >= window.StageData.count && !state.endless) {
       victory();
       return;
     }
-    state.portal = { x: clamp(e.x, 90, WORLD.w - 90), y: clamp(e.y, 90, WORLD.h - 90), t: 0 };
-    toast('Entre no portal para a próxima fase!');
+    state.bossDown = true;
+    state.bossDownPos = { x: clamp(e.x, 90, WORLD.w - 90), y: clamp(e.y, 90, WORLD.h - 90) };
+    toast('Chefe abatido! Elimine o resto para abrir o portal.');
   }
   function dropGems(e) {
     var n = e.boss ? 6 : e.elite ? 5 : 1, i;
@@ -967,13 +956,27 @@ window.__game = (function () {
   ];
   var upStacks = {};
   var RAR_W = [100, 42, 20];
+  // Ritmo de desbloqueio: mesma multiset de níveis, arma sorteada por run.
+  var UNLOCK_IDS = ['meteor', 'orb', 'miss', 'chain', 'frost', 'nova', 'mine', 'rail', 'rang'];
+  var UNLOCK_MINS = [2, 4, 4, 5, 5, 6, 6, 7, 7];
+  var unlockMin = {};
+  function shuffleUnlocks() {
+    var mins = UNLOCK_MINS.slice(0), i, j, t;
+    for (i = mins.length - 1; i > 0; i--) {
+      j = (rr() * (i + 1)) | 0;
+      t = mins[i]; mins[i] = mins[j]; mins[j] = t;
+    }
+    unlockMin = {};
+    for (i = 0; i < UNLOCK_IDS.length; i++) unlockMin[UNLOCK_IDS[i]] = mins[i];
+  }
   function rollChoices() {
     var pool = [], i, u;
     for (i = 0; i < UPS.length; i++) {
       u = UPS[i];
       var st = upStacks[u.id] || 0;
       if (st >= u.max) continue;
-      if (u.min && state.player.level < u.min) continue;
+      var need = (isUnlockCard(u) && unlockMin[u.id]) || u.min;
+      if (need && state.player.level < need) continue;
       if (u.req && !(upStacks[u.req] > 0)) continue;
       pool.push(u);
     }
@@ -1483,7 +1486,14 @@ window.__game = (function () {
     if (state.gemComboT > 0) state.gemComboT -= dt;
   }
   function updatePortal(dt) {
-    if (!state.portal) return;
+    if (!state.portal) {
+      if (state.bossDown && state.enemies.length === 0) {
+        var bp = state.bossDownPos || { x: WORLD.w / 2, y: WORLD.h / 2 };
+        state.portal = { x: bp.x, y: bp.y, t: 0 };
+        toast('Entre no portal para a próxima fase!');
+      }
+      return;
+    }
     state.portal.t += dt;
     if (rr() < dt * 8) burst(state.portal.x + (rr() - 0.5) * 60, state.portal.y + (rr() - 0.5) * 20, 1, '#bfe9ff', 60, 0.5, 3);
     if (d2(state.player.x, state.player.y, state.portal.x, state.portal.y) < 48 * 48) nextStage();
@@ -1636,6 +1646,8 @@ window.__game = (function () {
     if (el.mini) el.mini.style.display = 'block';
   }
   function startRun() {
+    if (!seedLocked) rng = mulberry32((Date.now() ^ (Math.random() * 4294967296)) >>> 0);
+    shuffleUnlocks();
     audio();
     try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) { /* silent */ }
     resetRun();
@@ -1660,6 +1672,8 @@ window.__game = (function () {
     state.bossSpawned = false;
     state.stageWarned = false;
     state.portal = null;
+    state.bossDown = false;
+    state.bossDownPos = null;
     state.enemies.length = 0;
     state.eshots.length = 0;
     state.strikes.length = 0;
@@ -1739,8 +1753,9 @@ window.__game = (function () {
     var i;
     for (i = 0; i < chips.length; i++) {
       var c = chips[i];
-      if (c.w === 'dash') continue;
+      if (c.w === 'dash') { c.box.style.display = ''; continue; }
       var owned = weaponOwned(c.w);
+      c.box.style.display = owned ? '' : 'none';
       c.box.className = 'wchip' + (owned ? '' : ' locked');
       c.lv.textContent = owned ? 'Nv' + Math.max(1, weaponLv(c.w)) : '—';
     }
@@ -1759,7 +1774,7 @@ window.__game = (function () {
     el.threat.textContent = threat() + '';
     var S = stageDef();
     if (el.stage) {
-      el.stage.textContent = 'F' + state.stage + ' ' + S.name + (state.bossSpawned ? ' — CHEFE!' : ' — chefe ' + fmtTime(Math.max(0, S.time - state.stageT)));
+      el.stage.textContent = 'F' + state.stage + ' ' + S.name + (state.portal ? ' — PORTAL ABERTO!' : state.bossDown ? ' — LIMPE A FASE!' : state.bossSpawned ? ' — CHEFE!' : ' — chefe ' + fmtTime(Math.max(0, S.time - state.stageT)));
     }
     if (el.bossbar) {
       if (state.boss && state.boss.hp > 0) {
@@ -1879,6 +1894,15 @@ window.__game = (function () {
   }
 
   // ---------- render ----------
+  // ---------- art magnify: sprites maiores e mais detalhados (só visual; raios de gameplay intactos) ----------
+  var MAGNIFY = 1.3;
+  function hexA(hex, a) {
+    var h = (hex || '#ffffff').replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var n = parseInt(h, 16);
+    if (isNaN(n)) return 'rgba(255,255,255,' + a + ')';
+    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  }
   function drawEyes(g, x, y, r, dx, dy, angry) {
     var dl = Math.sqrt(dx * dx + dy * dy) || 1;
     var px = (dx / dl) * r * 0.35, py = (dy / dl) * r * 0.35;
@@ -1914,7 +1938,7 @@ window.__game = (function () {
   }
   function drawSlimeBody(g, e, base) {
     var sq = 1 + Math.sin(e.t * 5) * 0.14;
-    var r = e.r;
+    var r = e.r * MAGNIFY;
     g.fillStyle = base;
     g.beginPath(); g.ellipse(e.x, e.y, r * sq, r / sq, 0, 0, TAU); g.fill();
     g.fillStyle = 'rgba(255,255,255,0.35)';
@@ -1932,11 +1956,14 @@ window.__game = (function () {
     if (e.type === 'phantom' && e.blinkT < 0.4) alpha *= 0.4;
     g.globalAlpha = alpha * (e.type === 'ghost' ? 0.6 + 0.3 * Math.sin(e.t * 6) : 1);
     var dx = p.x - e.x, dy = p.y - e.y;
-    var r = e.r;
+    var r = e.r * MAGNIFY;
     var jx = 0, jy = 0;
     if ((e.type === 'wasp' && e.mode === 'tele') || (e.boss && e.mode === 'teleB')) { jx = (rr() - 0.5) * 5; jy = (rr() - 0.5) * 5; }
     var ex = e.x + jx, ey = e.y + jy;
-    if (e.type === 'slime') {
+    g.fillStyle = 'rgba(0,0,0,0.3)';
+    g.beginPath(); g.ellipse(ex, ey + r * 0.95, r * 0.75, r * 0.26, 0, 0, TAU); g.fill();
+    var drewSprite = drawEnemySprite(g, e, ex, ey, r, dx);
+    if (drewSprite) { /* corpo substituído pelo sprite; resto (tint/hurt/coroa) segue abaixo */ } else if (e.type === 'slime') {
       drawSlimeBody(g, e, '#2ecc40');
       drawEyes(g, ex, ey - r * 0.1, r * 0.55, dx, dy, false);
       g.strokeStyle = '#0a5c14';
@@ -2154,7 +2181,7 @@ window.__game = (function () {
       g.beginPath(); g.ellipse(ex - r * 0.3, ey - r * 0.25, r * 0.16, r * 0.24, 0, 0, TAU); g.fill();
       g.beginPath(); g.ellipse(ex + r * 0.3, ey - r * 0.25, r * 0.16, r * 0.24, 0, 0, TAU); g.fill();
     }
-    if (e.tint) {
+    if (e.tint && !(drewSprite && e.boss)) {
       g.globalAlpha = alpha * 0.35;
       g.fillStyle = e.tint;
       g.beginPath(); g.arc(e.x, e.y, r, 0, TAU); g.fill();
@@ -2167,7 +2194,7 @@ window.__game = (function () {
     }
     g.globalAlpha = 1;
     if (e.boss) {
-      drawCrown(g, ex, ey - r - 4, r * 0.5);
+      if (!drewSprite) drawCrown(g, ex, ey - r - 4, r * 0.5);
       g.strokeStyle = 'rgba(255,60,60,' + (0.5 + 0.3 * Math.sin(e.t * 3)) + ')';
       g.lineWidth = 3;
       g.beginPath(); g.arc(ex, ey, r + 8, 0, TAU); g.stroke();
@@ -2193,7 +2220,26 @@ window.__game = (function () {
     g.globalAlpha = 1;
     var bob = p.moving ? Math.abs(Math.sin(p.walkT)) * 2 : Math.sin(state.time * 2) * 1.5;
     g.fillStyle = 'rgba(0,0,0,0.35)';
-    g.beginPath(); g.ellipse(p.x, p.y + p.r + 2, p.r * 0.8, 5, 0, 0, TAU); g.fill();
+    g.beginPath(); g.ellipse(p.x, p.y + p.r * MAGNIFY + 2, p.r * 1.05, 6, 0, 0, TAU); g.fill();
+    var mageImg = spriteFor(meta.mage);
+    var drewMage = false;
+    if (mageImg) {
+      drewMage = true;
+      var mside = p.r * 2.6 * MAGNIFY;
+      var mPrev = g.imageSmoothingEnabled;
+      g.imageSmoothingEnabled = false;
+      g.save();
+      g.translate(p.x, p.y + bob);
+      g.scale(p.aimX < 0 ? -1 : 1, 1);
+      g.drawImage(mageImg, -mside / 2, -mside / 2, mside, mside);
+      g.restore();
+      g.imageSmoothingEnabled = mPrev;
+    }
+    if (!drewMage) {
+    g.save();
+    g.translate(p.x, p.y + bob);
+    g.scale(MAGNIFY, MAGNIFY);
+    g.translate(-p.x, -p.y - bob);
     g.fillStyle = state.cloak;
     g.beginPath();
     g.moveTo(p.x, p.y - p.r - 8 + bob);
@@ -2201,8 +2247,25 @@ window.__game = (function () {
     g.lineTo(p.x + p.r + 2, p.y + p.r + bob);
     g.closePath();
     g.fill();
+    g.fillStyle = 'rgba(0,0,0,0.25)';
+    g.beginPath();
+    g.moveTo(p.x, p.y - p.r - 8 + bob);
+    g.lineTo(p.x + p.r + 2, p.y + p.r + bob);
+    g.lineTo(p.x + p.r * 0.15, p.y + p.r + bob);
+    g.closePath();
+    g.fill();
+    g.strokeStyle = '#ffd700';
+    g.lineWidth = 2;
+    g.beginPath();
+    g.moveTo(p.x - p.r - 2, p.y + p.r + bob);
+    g.lineTo(p.x + p.r + 2, p.y + p.r + bob);
+    g.stroke();
     g.fillStyle = '#ffdbac';
     g.beginPath(); g.arc(p.x, p.y - 4 + bob, p.r * 0.62, 0, TAU); g.fill();
+    g.fillStyle = '#4a2f1d';
+    g.fillRect(p.x - 9, p.y + 6 + bob, 18, 4);
+    g.fillStyle = '#ffd700';
+    g.fillRect(p.x - 2, p.y + 6 + bob, 4, 4);
     g.fillStyle = state.cloak;
     g.beginPath();
     g.moveTo(p.x - p.r * 0.8, p.y - 8 + bob);
@@ -2210,6 +2273,8 @@ window.__game = (function () {
     g.lineTo(p.x + p.r * 0.75, p.y - 6 + bob);
     g.closePath();
     g.fill();
+    g.fillStyle = '#ffd700';
+    g.fillRect(p.x - p.r * 0.8, p.y - 10 + bob, p.r * 1.55, 3);
     g.fillStyle = '#ffd700';
     g.beginPath(); g.arc(p.x + p.r * 0.2, p.y - p.r - 13 + bob, 2.5, 0, TAU); g.fill();
     g.fillStyle = '#14141c';
@@ -2222,6 +2287,8 @@ window.__game = (function () {
     g.moveTo(p.x - p.aimX * 6, p.y - p.aimY * 6 + bob);
     g.lineTo(sx, sy);
     g.stroke();
+    g.fillStyle = 'rgba(159,212,232,0.3)';
+    g.beginPath(); g.arc(sx, sy, 10 + Math.sin(state.time * 8) * 1.5, 0, TAU); g.fill();
     g.fillStyle = '#9fd4e8';
     g.beginPath(); g.arc(sx, sy, 4.5 + Math.sin(state.time * 8) * 1, 0, TAU); g.fill();
     if (state.sw && !state.swUsed) {
@@ -2229,15 +2296,29 @@ window.__game = (function () {
       g.lineWidth = 2;
       g.beginPath(); g.arc(p.x, p.y + bob, p.r + 7 + Math.sin(state.time * 5) * 2, 0, TAU); g.stroke();
     }
+    g.restore();
+    } else if (state.sw && !state.swUsed) {
+      g.strokeStyle = 'rgba(255,215,0,0.7)';
+      g.lineWidth = 2 * MAGNIFY;
+      g.beginPath(); g.arc(p.x, p.y + bob, (p.r + 7 + Math.sin(state.time * 5) * 2) * MAGNIFY, 0, TAU); g.stroke();
+    }
   }
   function drawProp(g, pr) {
-    var s = pr.s, x = pr.x, y = pr.y;
+    var s = pr.s * MAGNIFY, x = pr.x, y = pr.y;
     if (pr.k === 'tree') {
+      g.fillStyle = 'rgba(0,0,0,0.3)';
+      g.beginPath(); g.ellipse(x, y + 10 * s, 12 * s, 4 * s, 0, 0, TAU); g.fill();
       g.fillStyle = '#5d3a1a';
       g.fillRect(x - 3 * s, y - 6 * s, 6 * s, 16 * s);
       g.fillStyle = 'rgba(46,139,60,0.9)';
       g.beginPath(); g.arc(x, y - 14 * s, 13 * s, 0, TAU); g.fill();
+      g.fillStyle = 'rgba(62,175,78,0.9)';
+      g.beginPath(); g.arc(x - 4 * s, y - 18 * s, 8 * s, 0, TAU); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.15)';
+      g.beginPath(); g.arc(x - 6 * s, y - 20 * s, 4 * s, 0, TAU); g.fill();
     } else if (pr.k === 'pine') {
+      g.fillStyle = 'rgba(0,0,0,0.3)';
+      g.beginPath(); g.ellipse(x, y + 8 * s, 10 * s, 3.5 * s, 0, 0, TAU); g.fill();
       g.fillStyle = '#5d3a1a';
       g.fillRect(x - 2 * s, y - 2 * s, 4 * s, 10 * s);
       g.fillStyle = 'rgba(30,100,50,0.9)';
@@ -2246,7 +2327,15 @@ window.__game = (function () {
       g.lineTo(x - 11 * s, y - 2 * s);
       g.lineTo(x + 11 * s, y - 2 * s);
       g.closePath(); g.fill();
+      g.fillStyle = 'rgba(38,125,62,0.9)';
+      g.beginPath();
+      g.moveTo(x, y - 33 * s);
+      g.lineTo(x - 8 * s, y - 13 * s);
+      g.lineTo(x + 8 * s, y - 13 * s);
+      g.closePath(); g.fill();
     } else if (pr.k === 'rock') {
+      g.fillStyle = 'rgba(0,0,0,0.3)';
+      g.beginPath(); g.ellipse(x, y + 5 * s, 12 * s, 3.5 * s, 0, 0, TAU); g.fill();
       g.fillStyle = 'rgba(130,135,145,0.85)';
       g.beginPath();
       g.moveTo(x - 12 * s, y + 4 * s);
@@ -2254,7 +2343,15 @@ window.__game = (function () {
       g.lineTo(x + 8 * s, y - 6 * s);
       g.lineTo(x + 12 * s, y + 4 * s);
       g.closePath(); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,0.22)';
+      g.lineWidth = Math.max(1, 2 * s);
+      g.beginPath();
+      g.moveTo(x - 4 * s, y - 10 * s);
+      g.lineTo(x - 2 * s, y + 4 * s);
+      g.stroke();
     } else if (pr.k === 'bones') {
+      g.fillStyle = 'rgba(0,0,0,0.25)';
+      g.beginPath(); g.ellipse(x, y + 8 * s, 11 * s, 3 * s, 0, 0, TAU); g.fill();
       g.strokeStyle = 'rgba(220,215,200,0.8)';
       g.lineWidth = 3 * s;
       g.beginPath();
@@ -2263,6 +2360,9 @@ window.__game = (function () {
       g.stroke();
       g.fillStyle = 'rgba(220,215,200,0.85)';
       g.beginPath(); g.arc(x, y - 10 * s, 5 * s, 0, TAU); g.fill();
+      g.fillStyle = 'rgba(20,20,28,0.85)';
+      g.beginPath(); g.arc(x - 1.8 * s, y - 10 * s, 1.2 * s, 0, TAU); g.fill();
+      g.beginPath(); g.arc(x + 1.8 * s, y - 10 * s, 1.2 * s, 0, TAU); g.fill();
     } else if (pr.k === 'crystal') {
       g.fillStyle = 'rgba(77,200,200,0.85)';
       g.beginPath();
@@ -2314,23 +2414,25 @@ window.__game = (function () {
     g.fillStyle = th.bg;
     g.fillRect(0, 0, v.w, v.h);
     var cx = state.cam.x, cy = state.cam.y, i;
-    g.fillStyle = th.star;
-    for (i = 0; i < stars.length; i++) {
-      var st = stars[i];
-      var sx = st.x - cx, sy = st.y - cy;
-      if (sx < -4 || sy < -4 || sx > v.w + 4 || sy > v.h + 4) continue;
-      g.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(state.time * st.tw + st.ph));
-      g.fillRect(sx, sy, st.s, st.s);
+    var groundPat = groundPattern(g);
+    if (groundPat) {
+      // chão temático da fase, ancorado no mundo (rola com a câmera)
+      g.save();
+      g.translate(-cx, -cy);
+      g.fillStyle = groundPat;
+      g.fillRect(cx, cy, v.w, v.h);
+      g.restore();
+    } else {
+      g.fillStyle = th.star;
+      for (i = 0; i < stars.length; i++) {
+        var st = stars[i];
+        var sx = st.x - cx, sy = st.y - cy;
+        if (sx < -4 || sy < -4 || sx > v.w + 4 || sy > v.h + 4) continue;
+        g.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(state.time * st.tw + st.ph));
+        g.fillRect(sx, sy, st.s, st.s);
+      }
+      g.globalAlpha = 1;
     }
-    g.globalAlpha = 1;
-    g.strokeStyle = th.grid;
-    g.lineWidth = 1;
-    g.beginPath();
-    var step = 130;
-    var x0 = Math.floor(cx / step) * step, y0 = Math.floor(cy / step) * step, x, y;
-    for (x = x0; x < cx + v.w + step; x += step) { g.moveTo(x - cx, 0); g.lineTo(x - cx, v.h); }
-    for (y = y0; y < cy + v.h + step; y += step) { g.moveTo(0, y - cy); g.lineTo(v.w, y - cy); }
-    g.stroke();
     g.strokeStyle = 'rgba(255,60,60,0.7)';
     g.lineWidth = 4;
     g.strokeRect(8 - cx, 8 - cy, WORLD.w - 16, WORLD.h - 16);
@@ -2647,6 +2749,63 @@ window.__game = (function () {
     }
     var im2 = SHEETS[name];
     return (im2.complete && im2.naturalWidth > 0) ? im2 : null;
+  }
+  var SPRITES = {};
+  function spriteFor(name) {
+    if (typeof Image === 'undefined' || !name) return null;
+    if (!SPRITES[name]) {
+      var im = new Image();
+      im.src = 'sprites/' + name + '.png';
+      SPRITES[name] = im;
+    }
+    var im2 = SPRITES[name];
+    return (im2.complete && im2.naturalWidth > 0) ? im2 : null;
+  }
+  var GROUND_PATS = {};
+  function groundPattern(g) {
+    var n = ((state.stage - 1) % window.StageData.count) + 1;
+    var im = spriteFor('ground_' + n);
+    if (!im || !g.createPattern) return null;
+    if (!GROUND_PATS[n]) GROUND_PATS[n] = g.createPattern(im, 'repeat');
+    return GROUND_PATS[n];
+  }
+  var BOSS_SPRITE = {
+    'REI GOSMA': 'boss_slime', 'RAINHA MORCEGO': 'boss_bat', 'COGUMELO ANCIÃO': 'boss_shroom',
+    'IMPERATRIZ VESPA': 'boss_wasp', 'SENHOR CAVEIRA': 'boss_skull', 'GOLEM DE OBSIDIANA': 'boss_golem',
+    'TREANT MILENAR': 'boss_treant', 'BANSHEE': 'boss_banshee', 'DEVORADOR': 'boss_devourer',
+    'O METEORO': 'boss_meteor'
+  };
+  var SPR_SQUASH = { slime: 1, mama: 1, spitter: 1, boss_slime: 1, boss_devourer: 1 };
+  var SPR_FLAP = { bat: 1, wasp: 1, boss_bat: 1, boss_wasp: 1 };
+  var SPR_FLOAT = { ghost: 1, phantom: 1, wisp: 1, skull: 1, boss_banshee: 1, boss_skull: 1 };
+  function drawEnemySprite(g, e, ex, ey, r, dx) {
+    var name = (e.boss && BOSS_SPRITE[e.bname]) || e.type;
+    var im = spriteFor(name);
+    if (!im) return false;
+    var side = r * 2.4;
+    var sx = 1, sy = 1, dy = 0, rot = 0;
+    if (SPR_SQUASH[name]) {
+      var q = 1 + Math.sin(e.t * 6) * 0.08;
+      sx = q; sy = 1 / q;
+    } else if (SPR_FLAP[name]) {
+      var f = Math.sin(e.t * 14);
+      sy = 1 + f * 0.12; sx = 1 - f * 0.06;
+    } else if (SPR_FLOAT[name]) {
+      dy = Math.sin(e.t * 3) * r * 0.12;
+    } else {
+      rot = Math.sin(e.t * 4) * 0.06;
+    }
+    var flip = dx < 0 ? -1 : 1;
+    var prev = g.imageSmoothingEnabled;
+    g.imageSmoothingEnabled = false;
+    g.save();
+    g.translate(ex, ey + dy);
+    if (rot) g.rotate(rot);
+    g.scale(flip * sx, sy);
+    g.drawImage(im, -side / 2, -side / 2, side, side);
+    g.restore();
+    g.imageSmoothingEnabled = prev;
+    return true;
   }
   function drawSheetCell(g, name, cols, rows, col, row, x, y, size) {
     var im = sheetFor(name);
@@ -3279,7 +3438,19 @@ window.__game = (function () {
       var pts0 = meta.tree.points;
       damageEnemy(state.boss, 1e12, 0, 0, false);
       assert(meta.tree.points === pts0 + 1, 'boss gave no point');
-      assert(state.portal, 'no portal');
+      assert(state.bossDown, 'bossDown flag not set');
+      assert(!state.portal, 'portal opened before cleanup');
+      while (state.enemies.length > 0) damageEnemy(state.enemies[0], 1e12, 0, 0, false);
+      var leftover = spawnEnemy('slime', state.player.x + 200, state.player.y);
+      if (leftover) leftover.spawnT = 0;
+      var n0 = state.enemies.length;
+      state.spawnT = 0;
+      step(30, 0);
+      assert(state.enemies.length <= n0, 'enemies spawned after boss');
+      assert(!state.portal || state.enemies.length === 0, 'portal opened with enemies left');
+      while (state.enemies.length > 0) damageEnemy(state.enemies[0], 1e12, 0, 0, false);
+      step(10, 0);
+      assert(state.portal, 'no portal after cleanup');
       var s;
       for (s = 0; s < 20 && state.portal; s++) {
         var pdx = state.portal.x - state.player.x, pdy = state.portal.y - state.player.y;
@@ -3324,7 +3495,14 @@ window.__game = (function () {
       mrow.children[2].click();
       assert(meta.mage === 'eng', 'mage pick failed');
       click('btn-start');
-      assert(state.orb.unlocked, 'mage start weapon failed');
+      assert(!state.orb.unlocked && !state.meteor.unlocked && !state.chain.unlocked && !state.nova.unlocked && !state.rail.unlocked && !state.miss.unlocked && !state.frost.unlocked && !state.mine.unlocked && !state.rang.unlocked, 'run starts with weapon unlocked');
+      var mchip = null, bchip = null, ci;
+      for (ci = 0; ci < chips.length; ci++) {
+        if (chips[ci].w === 'meteor') mchip = chips[ci];
+        if (chips[ci].w === 'bolt') bchip = chips[ci];
+      }
+      assert(mchip && mchip.box.style.display === 'none', 'locked chip shown');
+      assert(bchip && bchip.box.style.display !== 'none', 'bolt chip hidden');
       quitToShop();
       meta.stats.kills = 1000;
       checkMiles();
@@ -3657,7 +3835,7 @@ window.__game = (function () {
     buyPoint: buyPoint, renderTree: renderTree, renderWTree: renderWTree, checkMiles: checkMiles,
     nextStage: nextStage, continueEndless: continueEndless,
     state: state, keys: keys, meta: function () { return meta; },
-    debug: { spawn: spawnEnemy, hurt: damageEnemy, boss: spawnBoss, seed: function (s) { rng = mulberry32(s >>> 0); } },
+    debug: { spawn: spawnEnemy, hurt: damageEnemy, boss: spawnBoss, seed: function (s) { rng = mulberry32(s >>> 0); seedLocked = true; } },
     botTick: botTick, botSpend: botSpend, bankCoins: bankCoins, botFrame: botFrame, endBotSession: endBotSession,
     botConfig: function (c) {
       if (c) for (var k in c) if (k in botCfg) botCfg[k] = c[k];
